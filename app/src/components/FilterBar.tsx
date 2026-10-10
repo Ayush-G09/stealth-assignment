@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { fetchAgents, type Filters, type Status } from '../lib/api'
 
 interface Props {
@@ -13,6 +13,7 @@ export function FilterBar({ filters, total, onChange }: Props) {
   const [text, setText] = useState(filters.q)
 
   const [attempt, setAttempt] = useState(0)
+  const menu = useRef<HTMLDetailsElement>(null)
   useEffect(() => {
     const c = new AbortController()
     fetchAgents(c.signal)
@@ -20,6 +21,26 @@ export function FilterBar({ filters, total, onChange }: Props) {
       .catch((e: Error) => { if (e.name !== 'AbortError') setAgentsFailed(true) })
     return () => c.abort()
   }, [attempt])
+
+  // The agents menu is a <details>; close it on Esc or a click outside, like a normal dropdown.
+  useEffect(() => {
+    const close = (e: Event) => {
+      const el = menu.current
+      if (!el?.open) return
+      if (e instanceof KeyboardEvent) {
+        if (e.key !== 'Escape') return
+        e.stopPropagation() // don't also close the detail panel
+        el.querySelector('summary')?.focus()
+      } else if (el.contains(e.target as Node)) return
+      el.open = false
+    }
+    document.addEventListener('mousedown', close)
+    document.addEventListener('keydown', close, true)
+    return () => {
+      document.removeEventListener('mousedown', close)
+      document.removeEventListener('keydown', close, true)
+    }
+  }, [])
 
   // Keep the input in sync when the URL changes underneath it (back/forward, chips, clear).
   // Adjusting state during render is the supported way to derive state from a changed prop.
@@ -61,8 +82,15 @@ export function FilterBar({ filters, total, onChange }: Props) {
         <option value="blocked">blocked</option>
         <option value="error">error</option>
       </select>
-      <details className="agent-menu">
-        <summary>Agents{filters.agents.length ? ` (${filters.agents.length})` : ''}</summary>
+      <details className="agent-menu" ref={menu}>
+        <summary>
+          Agents{filters.agents.length ? ` (${filters.agents.length})` : ''}
+          {agentsFailed && (
+            <span className="warn" title="Couldn't load the agent list">
+              {' '}⚠<span className="sr-only"> Couldn't load the agent list. Open the menu to retry.</span>
+            </span>
+          )}
+        </summary>
         <div className="agent-list">
           {agentsFailed && <button onClick={() => setAttempt((n) => n + 1)}>Couldn't load agents, retry</button>}
           {agents.map((a) => (

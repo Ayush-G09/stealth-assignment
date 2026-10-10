@@ -32,7 +32,7 @@ button { cursor: pointer; }
 .count { margin-left: auto; color: var(--muted); }
 .agent-menu { position: relative; }
 .agent-menu summary { cursor: pointer; list-style: none; }
-.agent-list { position: absolute; z-index: 5; top: 100%; margin-top: 4px; padding: 8px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; display: grid; gap: 4px; min-width: 200px; }
+.agent-list { position: absolute; z-index: 5; top: 100%; right: 0; width: max-content; max-width: calc(100vw - 32px); margin-top: 4px; padding: 8px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; display: grid; gap: 4px; min-width: 200px; }
 .num { text-align: right; font-variant-numeric: tabular-nums; }
 /* Virtualised table: row/header heights must match ROW_H / HEAD_H in VirtualTable.tsx */
 .vt { --cols: minmax(150px, 1fr) minmax(110px, .9fr) minmax(110px, .9fr) 96px 90px minmax(160px, 2fr); flex: 1; min-height: 0; overflow: auto; position: relative; border: 1px solid var(--border); border-radius: 8px 8px 0 0; }
@@ -109,3 +109,12 @@ input::placeholder { color: var(--muted); opacity: 1; }
 }
 .vt::-webkit-scrollbar-thumb:hover, .panel-body::-webkit-scrollbar-thumb:hover, pre::-webkit-scrollbar-thumb:hover, main::-webkit-scrollbar-thumb:hover, .agent-list::-webkit-scrollbar-thumb:hover { background: var(--scroll-thumb-hover); background-clip: content-box; }
 .vt::-webkit-scrollbar-corner, pre::-webkit-scrollbar-corner { background: transparent; }
+
+.warn { color: var(--blocked); }
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+/* Small phones: anchoring to the button can clip, so let the list span the whole filter row instead. */
+.filters { position: relative; }
+@media (max-width: 520px) {
+  .agent-menu { position: static; }
+  .agent-list { left: 0; right: 0; width: auto; max-width: none; }
+}

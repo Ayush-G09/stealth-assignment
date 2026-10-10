@@ -94,7 +94,7 @@ export function DetailPanel({ id, onClose }: Props) {
               <dt>Agent</dt><dd>{event.agent}</dd>
               <dt>Tool</dt><dd><code>{event.tool}</code></dd>
               <dt>Status</dt><dd><span className={`badge ${event.status}`}>{event.status}</span></dd>
-              <dt>Latency</dt><dd>{event.latencyMs} ms</dd>
+              <dt>Latency</dt><dd>{event.latencyMs.toLocaleString()} ms</dd>
               <dt>Policy matches</dt>
               <dd>
                 {event.policyMatches?.length
