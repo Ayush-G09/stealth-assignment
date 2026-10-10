@@ -169,10 +169,10 @@ main {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 16px;
-  align-items: start;
 }
 
 .agent-card {
+  min-height: 220px;
   padding: 16px;
   border: 1px solid var(--border);
   border-radius: 12px;

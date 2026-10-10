@@ -11,8 +11,6 @@ const tickerToggle = document.getElementById('ticker-toggle');
 const preview = document.getElementById('row-preview');
 const scrollContext = document.getElementById('scroll-context');
 
-const minCardHeight = 220;
-
 function escapeHtml(value) {
   return String(value)
     .replace(/&/g, '&amp;')
@@ -48,22 +46,6 @@ function renderAgents() {
       '</article>'
     );
   }).join('');
-  grid.querySelectorAll('img').forEach((img) => img.addEventListener('load', equalizeCardHeights));
-}
-
-function equalizeCardHeights() {
-  const cards = grid.querySelectorAll('.agent-card');
-  cards.forEach((card) => {
-    card.style.height = '';
-    const rowTop = card.offsetTop;
-    let tallest = Math.max(card.offsetHeight, minCardHeight);
-    cards.forEach((other) => {
-      if (other.offsetTop === rowTop) {
-        tallest = Math.max(tallest, other.offsetHeight);
-      }
-    });
-    card.style.height = tallest + 'px';
-  });
 }
 
 // Viewed ids live in a Set (O(1) lookups) that is read from storage once and written back once per render.
@@ -273,7 +255,6 @@ searchInput.addEventListener('input', () => {
   searchTimer = setTimeout(() => renderResults(searchInput.value), 150);
 });
 window.addEventListener('scroll', onScroll, { passive: true });
-window.addEventListener('resize', equalizeCardHeights);
 window.addEventListener('resize', fitSummaries);
 resultsList.addEventListener('mousemove', showPreview);
 resultsList.addEventListener('mouseleave', hidePreview);
@@ -283,7 +264,6 @@ backToTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 's
 tickerToggle.addEventListener('click', () => (tickerPanel ? closeTicker() : openTicker()));
 
 renderAgents();
-equalizeCardHeights();
 renderResults('');
 
 // Warm the search index after first paint so the first keystroke is not the slow one.
