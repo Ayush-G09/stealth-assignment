@@ -10,7 +10,8 @@
 }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--fg); }
-.app { max-width: 1200px; margin: 0 auto; padding: 16px; }
+.app { max-width: 1200px; margin: 0 auto; padding: 16px; height: 100dvh; display: flex; flex-direction: column; }
+main { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: auto; }
 h1 { font-size: 20px; margin: 0 0 12px; }
 .filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
 input[type=search] { flex: 1 1 240px; }
@@ -21,12 +22,18 @@ button { cursor: pointer; }
 .agent-menu { position: relative; }
 .agent-menu summary { cursor: pointer; list-style: none; }
 .agent-list { position: absolute; z-index: 5; top: 100%; margin-top: 4px; padding: 8px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; display: grid; gap: 4px; min-width: 200px; }
-table { width: 100%; border-collapse: collapse; }
-th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
-th { position: sticky; top: 0; background: var(--surface); }
 .num { text-align: right; font-variant-numeric: tabular-nums; }
-tbody tr { cursor: pointer; }
-tbody tr:hover, tr.selected { background: var(--surface); }
+/* Virtualised table: row/header heights must match ROW_H / HEAD_H in VirtualTable.tsx */
+.vt { --cols: minmax(150px, 1.1fr) minmax(120px, 1fr) minmax(120px, 1fr) 100px 100px; flex: 1; min-height: 0; overflow: auto; position: relative; border: 1px solid var(--border); border-radius: 8px; }
+.vt-head, .vt-row { display: grid; grid-template-columns: var(--cols); align-items: center; gap: 8px; padding: 0 12px; }
+.vt-head { position: sticky; top: 0; z-index: 2; height: 36px; background: var(--surface); border-bottom: 1px solid var(--border); font-weight: 600; }
+.vt-body { position: relative; }
+.vt-window { position: absolute; top: 0; left: 0; right: 0; will-change: transform; }
+.vt-row { height: 40px; border-bottom: 1px solid var(--border); cursor: pointer; }
+.vt-row > div { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vt-row:hover, .vt-row.selected { background: var(--surface); }
+.vt:focus-visible .vt-row.active { outline: 2px solid var(--accent); outline-offset: -2px; }
+.vt-foot { display: flex; align-items: center; justify-content: center; }
 .badge { padding: 1px 8px; border-radius: 10px; border: 1px solid currentColor; font-size: 12px; }
 .badge.ok { color: var(--ok); } .badge.blocked { color: var(--blocked); } .badge.error { color: var(--error); }
 .state, .more, .center { text-align: center; padding: 32px 0; }
