@@ -22,7 +22,8 @@ function escapeHtml(value) {
 }
 
 function formatTime(iso) {
-  return new Date(iso).toLocaleTimeString('en-GB', { hour12: false, timeZone: 'UTC' });
+  // ISO timestamps are UTC, so HH:MM:SS is a slice (toLocaleTimeString builds a formatter per call).
+  return iso.slice(11, 19);
 }
 
 function countByAgent(events) {
@@ -65,18 +66,19 @@ function equalizeCardHeights() {
   });
 }
 
+// Viewed ids live in a Set (O(1) lookups) that is read from storage once and written back once per render.
+let viewed = null;
+
 function loadViewed() {
-  return JSON.parse(localStorage.getItem(storageKey) || '[]');
+  if (!viewed) viewed = new Set(JSON.parse(localStorage.getItem(storageKey) || '[]'));
+  return viewed;
 }
 
 function rememberViewed(items) {
-  const viewed = loadViewed();
-  for (const item of items) {
-    if (!viewed.includes(item.id)) {
-      viewed.push(item.id);
-    }
-    localStorage.setItem(storageKey, JSON.stringify(viewed));
-  }
+  const seen = loadViewed();
+  const before = seen.size;
+  for (const item of items) seen.add(item.id);
+  if (seen.size !== before) localStorage.setItem(storageKey, JSON.stringify([...seen]));
 }
 
 // Newest-first order and per-event search text are computed once, not on every keystroke.
@@ -105,10 +107,11 @@ function search(query) {
 function renderResults(query) {
   const matches = search(query);
   const page = matches.slice(0, pageSize);
-  const viewed = loadViewed();
+  const seen = loadViewed();
+  const isNewFlags = page.map((event) => !seen.has(event.id));
   resultsCount.textContent = matches.length.toLocaleString() + ' matching tool calls';
-  resultsList.innerHTML = page.map((event) => {
-    const isNew = !viewed.includes(event.id);
+  resultsList.innerHTML = page.map((event, i) => {
+    const isNew = isNewFlags[i];
     return (
       '<li class="result-row status-' + event.status + '" data-id="' + event.id + '" data-minute="' + event.timestamp.slice(11, 16) + '">' +
       '<span class="result-time">' + formatTime(event.timestamp) + '</span>' +
