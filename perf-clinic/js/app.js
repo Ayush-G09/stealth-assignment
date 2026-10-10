@@ -184,9 +184,8 @@ function hidePreview() {
 function showPreview(event) {
   const row = event.target.closest('.result-row');
   if (!row) return;
-  const item = window.ACTIVITY.find((candidate) => candidate.id === row.dataset.id);
-  if (!item) return;
-  preview.textContent = item.summary;
+  // The row already holds the summary, no need to search 100k events for it.
+  preview.textContent = row.querySelector('.result-summary').textContent;
   preview.style.top = event.clientY + 12 + 'px';
   preview.style.left = event.clientX + 12 + 'px';
   preview.hidden = false;

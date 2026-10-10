@@ -125,12 +125,14 @@ main {
   border: 1px solid var(--border);
   border-radius: 999px;
   background: var(--surface);
+  container-type: inline-size;
 }
 
 .alerts-track {
   position: absolute;
   top: 8px;
   left: 100%;
+  will-change: transform;
   display: flex;
   gap: 48px;
   white-space: nowrap;
@@ -142,12 +144,20 @@ main {
   font-size: 14px;
 }
 
+/* Animate transform (compositor) instead of left (layout). 220cqw = the old 100% -> -120% travel. */
 @keyframes alerts-scroll {
   from {
-    left: 100%;
+    transform: translateX(0);
   }
   to {
-    left: -120%;
+    transform: translateX(-220cqw);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alerts-track {
+    animation: none;
+    left: 16px;
   }
 }
 
