@@ -79,11 +79,27 @@ function rememberViewed(items) {
   }
 }
 
+// Newest-first order and per-event search text are computed once, not on every keystroke.
+let sortedEvents = null;
+let haystacks = null;
+
+function buildHaystacks() {
+  if (!haystacks) {
+    haystacks = new Map(window.ACTIVITY.map((event) => [event, JSON.stringify(event).toLowerCase()]));
+  }
+}
+
 function search(query) {
   const needle = query.trim().toLowerCase();
-  return window.ACTIVITY
-    .filter((event) => JSON.stringify(event).toLowerCase().includes(needle))
-    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  if (!sortedEvents) {
+    sortedEvents = window.ACTIVITY
+      .map((event) => ({ event, ts: Date.parse(event.timestamp) }))
+      .sort((a, b) => b.ts - a.ts)
+      .map((entry) => entry.event);
+  }
+  if (!needle) return sortedEvents;
+  buildHaystacks();
+  return sortedEvents.filter((event) => haystacks.get(event).includes(needle));
 }
 
 function renderResults(query) {
@@ -214,7 +230,11 @@ function closeTicker() {
   tickerToggle.textContent = 'Show live calls';
 }
 
-searchInput.addEventListener('input', () => renderResults(searchInput.value));
+let searchTimer = 0;
+searchInput.addEventListener('input', () => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => renderResults(searchInput.value), 150);
+});
 window.addEventListener('scroll', onScroll);
 window.addEventListener('resize', equalizeCardHeights);
 window.addEventListener('resize', fitSummaries);
@@ -228,3 +248,6 @@ tickerToggle.addEventListener('click', () => (tickerPanel ? closeTicker() : open
 renderAgents();
 equalizeCardHeights();
 renderResults('');
+
+// Warm the search index after first paint so the first keystroke is not the slow one.
+(window.requestIdleCallback || setTimeout)(buildHaystacks);
