@@ -125,3 +125,9 @@ input::placeholder { color: var(--muted); opacity: 1; }
 .sk-row .num .sk-bar { margin-left: auto; }
 .sk-pill { width: 56px; height: 20px; border-radius: 999px; }
 .sk-row:hover { background: transparent; }
+
+/* Error boundary fallback */
+.crash { max-width: 520px; margin: 12vh auto 0; padding: 24px; text-align: center; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
+.crash h1 { font-size: 20px; }
+.crash pre { text-align: left; max-height: 160px; }
+.crash-actions { display: flex; gap: 8px; justify-content: center; margin-top: 12px; }
