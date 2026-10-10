@@ -44,8 +44,13 @@ npm run build    # type-check + production build
 
 - **Event list** of all ~50,000 events, loaded page by page from the cursor API as you scroll. The list is a
   **hand-written virtualized table** (no library): only the rows in view, plus a small buffer, are in the DOM.
-- **Search and filters** (free text, agents, status). Everything lives in the URL, so refresh, back/forward and
+- **Search and filters** (free text, agents, status, time range). Everything lives in the URL, so refresh, back/forward and
   copied links all restore the same view. Active filters show as removable chips.
+- **Events-over-time chart** (Apache ECharts, lazy-loaded so it stays out of the initial bundle) built from
+  `/events/histogram` for the *current* search and filters. **Drag across the bars to zoom into a time range**, or click
+  a bar to drill into it: the range is stored in the URL as `from`/`to`, filters the event list, and re-buckets the chart
+  (hours, then 5-minute, then 1-minute bars). "Reset zoom" or the range chip clears it, and a "Set a time range" form
+  offers a keyboard-accessible alternative to dragging.
 - **Detail panel** at `?event=<id>`: full args, result and policy matches, with copy buttons. It is a modal dialog
   that closes with Esc or a click on the blurred background and returns focus to the list.
 - **Loading, empty, error and slow-network states** for the list, "load more", the agents filter and the detail panel,
@@ -74,11 +79,15 @@ app/src/
     useUrlState.ts           filters + open event <-> URL (push/replace, back/forward)
     useEvents.ts             cursor pagination, stale-response protection, slow-network flag
     virtual.ts               pure windowing math (unit-tested)
+    histogram.ts             bucket choice, gap filling, drag-selection -> time range (pure, unit-tested)
+    useHistogram.ts          chart data hook: stale-while-revalidate, abort, retry
+    timeRange.ts             strict ISO validation and labels for the from/to range
     theme.ts                 System / Light / Dark persistence
   components/
     VirtualTable.tsx         the hand-built virtualized grid
     EventTable.tsx           loading / empty / error states around the grid
     FilterBar.tsx            search, status, agents, filter chips
+    Histogram.tsx            ECharts events-over-time chart, drag-to-zoom, range form
     DetailPanel.tsx          modal event details
 perf-clinic/                 Part B page (plain HTML/CSS/JS), fixed
 PERF.md                      Part B findings, fixes and measurements

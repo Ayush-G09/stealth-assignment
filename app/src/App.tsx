@@ -1,12 +1,16 @@
-import { useCallback } from 'react'
+import { lazy, Suspense, useCallback } from 'react'
 import { DetailPanel } from './components/DetailPanel'
 import { EventTable } from './components/EventTable'
 import { ThemeToggle } from './components/ThemeToggle'
 import { FilterBar } from './components/FilterBar'
 import { EMPTY_FILTERS } from './lib/api'
+import { readChartOpen } from './lib/chartPrefs'
 import { useEvents } from './lib/useEvents'
 import { useUrlState } from './lib/useUrlState'
 import './index.css'
+
+// The chart pulls in ECharts (large), so load it on demand and keep it out of the initial bundle.
+const Histogram = lazy(() => import('./components/Histogram'))
 
 export default function App() {
   const [url, update] = useUrlState()
@@ -25,6 +29,13 @@ export default function App() {
         <ThemeToggle />
       </header>
       <FilterBar filters={filters} total={ev.total} refreshing={ev.refreshing} onChange={update} />
+      <Suspense
+        fallback={
+          <div className={'chart chart-placeholder' + (readChartOpen() ? '' : ' is-collapsed')} aria-hidden="true" />
+        }
+      >
+        <Histogram filters={filters} onSelectRange={({ from, to }) => update({ from, to })} />
+      </Suspense>
       <main>
         <EventTable
           {...ev}

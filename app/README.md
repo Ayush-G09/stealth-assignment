@@ -19,4 +19,9 @@ Tests cover the logic most likely to break quietly:
 - [`src/lib/virtual.test.ts`](src/lib/virtual.test.ts): the windowing math behind the virtualized table.
 - [`src/lib/useEvents.test.tsx`](src/lib/useEvents.test.tsx): pagination, stale-response protection, keep-previous-rows
   while refreshing, error and retry paths.
+- [`src/lib/histogram.test.ts`](src/lib/histogram.test.ts), [`src/lib/useHistogram.test.tsx`](src/lib/useHistogram.test.tsx) and
+  [`src/components/Histogram.test.tsx`](src/components/Histogram.test.tsx): chart bucketing, gap filling, selection-to-range
+  conversion, loading/error/empty states and the range form.
+- [`src/lib/api.test.ts`](src/lib/api.test.ts) and [`src/lib/useUrlState.test.ts`](src/lib/useUrlState.test.ts): the API client's
+  retry/abort behaviour and URL parsing/serializing.
 - [`src/components/ErrorBoundary.test.tsx`](src/components/ErrorBoundary.test.tsx): the crash-recovery screen.
