@@ -33,6 +33,7 @@ Other app scripts (run inside `app/`):
 ```bash
 npm test         # unit tests (Vitest)
 npm run lint     # Oxlint
+npm run format   # Prettier (config in the repo root); `format:check` to verify without writing
 npm run build    # type-check + production build
 ```
 

@@ -1,0 +1,9 @@
+# Not part of the formatted app source
+node_modules
+dist
+bin
+scripts
+perf-clinic
+package-lock.json
+ASSIGNMENT.md
+PERF.md
