@@ -23,7 +23,7 @@ export default function App() {
         </div>
         <ThemeToggle />
       </header>
-      <FilterBar filters={filters} total={ev.total} onChange={update} />
+      <FilterBar filters={filters} total={ev.total} refreshing={ev.refreshing} onChange={update} />
       <main>
         <EventTable
           {...ev}

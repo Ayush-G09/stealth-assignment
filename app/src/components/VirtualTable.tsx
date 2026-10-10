@@ -13,6 +13,7 @@ const fmt = new Intl.DateTimeFormat(undefined, { dateStyle: 'short', timeStyle: 
 
 interface Props {
   items: EventItem[]
+  refreshing: boolean
   query: string
   total: number | null
   hasMore: boolean
@@ -143,12 +144,13 @@ export function VirtualTable(p: Props) {
   const rows = p.items.slice(range.start, range.end)
 
   return (
-    <div className="vt-wrap">
+    <div className={'vt-wrap' + (p.refreshing ? ' is-refreshing' : '')}>
     <div
       ref={scroller}
       className="vt"
       role="grid"
       aria-label="Agent events"
+      aria-busy={p.refreshing}
       aria-rowcount={(p.total ?? count) + 1}
       aria-activedescendant={activeEvent ? `ev-${activeEvent.id}` : undefined}
       tabIndex={0}
@@ -183,14 +185,17 @@ export function VirtualTable(p: Props) {
       </div>
     </div>
       <div className="vt-foot" role="status" aria-live="polite">
+        {p.refreshing && (
+          <span>{p.slow ? 'Still updating, slow connection…' : 'Updating results…'}</span>
+        )}
         {p.loadingMore && <span>{p.slow ? 'Still loading, slow connection…' : 'Loading more…'}</span>}
         {p.moreError && (
           <span>Couldn't load more ({p.moreError}) <button onClick={p.onRetry}>Retry</button></span>
         )}
-        {p.hasMore && !p.loadingMore && !p.moreError && (
+        {!p.refreshing && p.hasMore && !p.loadingMore && !p.moreError && (
           <span className="muted">Showing {count.toLocaleString()}{p.total ? ` of ${p.total.toLocaleString()}` : ''} events</span>
         )}
-        {!p.hasMore && !p.loadingMore && <span className="muted">End of results ({count.toLocaleString()} events)</span>}
+        {!p.refreshing && !p.hasMore && !p.loadingMore && <span className="muted">End of results ({count.toLocaleString()} events)</span>}
       </div>
     </div>
   )

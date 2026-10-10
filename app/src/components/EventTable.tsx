@@ -5,6 +5,8 @@ interface Props {
   items: EventItem[]
   total: number | null
   query: string
+  refreshing: boolean
+  dataKey: string
   loading: boolean
   loadingMore: boolean
   error: string | null
@@ -76,7 +78,9 @@ export function EventTable(p: Props) {
 
   return (
     <VirtualTable
+      key={p.dataKey} // remount (scroll to top, active row reset) only when new results land
       items={p.items}
+      refreshing={p.refreshing}
       query={p.query}
       total={p.total}
       hasMore={p.hasMore}

@@ -4,10 +4,11 @@ import { fetchAgents, type Filters, type Status } from '../lib/api'
 interface Props {
   filters: Filters
   total: number | null
+  refreshing: boolean
   onChange: (patch: Partial<Filters>, mode?: 'push' | 'replace') => void
 }
 
-export function FilterBar({ filters, total, onChange }: Props) {
+export function FilterBar({ filters, total, refreshing, onChange }: Props) {
   const [agents, setAgents] = useState<string[]>([])
   const [agentsFailed, setAgentsFailed] = useState(false)
   const [text, setText] = useState(filters.q)
@@ -100,7 +101,7 @@ export function FilterBar({ filters, total, onChange }: Props) {
           ))}
         </div>
       </details>
-      <span className="count" aria-live="polite">{total !== null ? `${total.toLocaleString()} events` : ''}</span>
+      <span className="count" aria-live="polite">{refreshing ? 'Updating…' : total !== null ? `${total.toLocaleString()} events` : ''}</span>
     </div>
     {chips.length > 0 && (
       <ul className="chips" aria-label="Active filters">

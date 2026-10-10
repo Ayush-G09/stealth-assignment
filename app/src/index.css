@@ -131,3 +131,8 @@ input::placeholder { color: var(--muted); opacity: 1; }
 .crash h1 { font-size: 20px; }
 .crash pre { text-align: left; max-height: 160px; }
 .crash-actions { display: flex; gap: 8px; justify-content: center; margin-top: 12px; }
+
+/* Stale-while-revalidate: keep the previous rows visible, dimmed, until the new results land. */
+.vt-wrap .vt { transition: opacity .15s; }
+.vt-wrap.is-refreshing .vt { opacity: .5; }
+.vt-wrap.is-refreshing .vt-foot { color: var(--muted); }
