@@ -202,9 +202,36 @@ describe('retry', () => {
     expect((out.error as ApiError).status).toBe(404)
   })
 
+  it('reports a successful but unparseable body as a bad response, not as an unreachable API', async () => {
+    scriptFetch('malformed')
+    const out = settle(fetchAgents(new AbortController().signal))
+    await vi.advanceTimersByTimeAsync(5000)
+    expect(out.done).toBe(true)
+    expect(out.error).toBeInstanceOf(ApiError)
+    expect((out.error as Error).message).toBe('The API returned an invalid response')
+    expect(calls).toHaveLength(1) // the body will not get better by asking again
+  })
 })
 
 describe('abort', () => {
+  it('keeps an abort that happens while the body is being read as an AbortError (not an invalid response)', async () => {
+    calls = []
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: string, init?: RequestInit) => {
+        calls.push({ url, signal: init?.signal })
+        const res = new Response('{}', { status: 200 })
+        vi.spyOn(res, 'json').mockRejectedValue(new DOMException('Aborted', 'AbortError'))
+        return Promise.resolve(res)
+      }),
+    )
+    const out = settle(fetchAgents(new AbortController().signal))
+    await vi.advanceTimersByTimeAsync(5000)
+    expect((out.error as Error).name).toBe('AbortError')
+    expect(out.error).not.toBeInstanceOf(ApiError)
+    expect(calls).toHaveLength(1) // not retried
+  })
+
   it('rejects with AbortError (not an ApiError) when aborted mid-request, without retrying', async () => {
     hangingFetch()
     const controller = new AbortController()

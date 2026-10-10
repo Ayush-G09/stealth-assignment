@@ -47,12 +47,25 @@ const sleep = (ms: number, signal?: AbortSignal) =>
     })
   })
 
+/**
+ * Parse a successful response. A body that is not valid JSON is a bad response from a reachable API, so it must
+ * not be reported (or retried) as a network failure. An abort while the body streams in is still an abort.
+ */
+async function readJson<T>(res: Response): Promise<T> {
+  try {
+    return (await res.json()) as T
+  } catch (err) {
+    if ((err as Error).name === 'AbortError') throw err
+    throw new ApiError('The API returned an invalid response')
+  }
+}
+
 /** GET JSON; retries 5xx / network failures with backoff, never retries aborts or 4xx. */
 async function getJson<T>(path: string, signal?: AbortSignal, retries = 2): Promise<T> {
   for (let attempt = 0; ; attempt++) {
     try {
       const res = await fetch(BASE + path, { signal })
-      if (res.ok) return (await res.json()) as T
+      if (res.ok) return await readJson<T>(res)
       if (res.status < 500 || attempt >= retries) {
         throw new ApiError(`Request failed (${res.status})`, res.status)
       }
