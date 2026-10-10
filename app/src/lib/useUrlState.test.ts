@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it } from 'vitest'
+import { EMPTY_FILTERS } from './api'
 import { parse, serialize, type UrlState } from './useUrlState'
 
-const empty: UrlState = { q: '', agents: [], status: '', eventId: null }
+const empty: UrlState = { ...EMPTY_FILTERS, eventId: null }
 const state = (patch: Partial<UrlState>): UrlState => ({ ...empty, ...patch })
 
 beforeEach(() => {
@@ -16,10 +17,16 @@ describe('parse', () => {
   })
 
   it('reads every field', () => {
-    expect(parse('?q=stripe&agent=billing-assistant&status=error&event=evt_1')).toEqual({
+    expect(
+      parse(
+        '?q=stripe&agent=billing-assistant&status=error&from=2026-10-09T10:00:00Z&to=2026-10-09T11:00:00Z&event=evt_1',
+      ),
+    ).toEqual({
       q: 'stripe',
       agents: ['billing-assistant'],
       status: 'error',
+      from: '2026-10-09T10:00:00Z',
+      to: '2026-10-09T11:00:00Z',
       eventId: 'evt_1',
     })
   })
@@ -73,15 +80,49 @@ describe('parse', () => {
   })
 })
 
+describe('parse: time range', () => {
+  it('reads from and to', () => {
+    const s = parse('?from=2026-10-09T10:00:00Z&to=2026-10-09T11:00:00Z')
+    expect(s.from).toBe('2026-10-09T10:00:00Z')
+    expect(s.to).toBe('2026-10-09T11:00:00Z')
+  })
+
+  it('drops bounds that are not valid timestamps', () => {
+    const s = parse('?from=yesterday&to=2026-10-09T11:00:00Z')
+    expect(s.from).toBe('')
+    expect(s.to).toBe('2026-10-09T11:00:00Z')
+  })
+
+  it('drops an inverted range entirely', () => {
+    const s = parse('?from=2026-10-09T12:00:00Z&to=2026-10-09T11:00:00Z')
+    expect(s.from).toBe('')
+    expect(s.to).toBe('')
+  })
+
+  it('does not accept a "+" offset that arrived as a space, but does accept it when encoded', () => {
+    expect(parse('?from=2026-10-09T10:00:00+05:30').from).toBe('')
+    expect(parse('?from=2026-10-09T10:00:00%2B05:30').from).toBe('2026-10-09T10:00:00+05:30')
+  })
+})
+
 describe('serialize', () => {
   it('falls back to the current path when there is nothing to put in the query', () => {
     history.replaceState(null, '', '/explorer')
     expect(serialize(empty)).toBe('/explorer')
   })
 
-  it('emits params in a stable order: q, agent(s), status, event', () => {
-    const s = state({ eventId: 'evt_1', status: 'error', agents: ['b', 'a'], q: 'x' })
-    expect(serialize(s)).toBe('?q=x&agent=b&agent=a&status=error&event=evt_1')
+  it('emits params in a stable order: q, agent(s), status, from, to, event', () => {
+    const s = state({
+      eventId: 'evt_1',
+      to: '2026-10-09T11:00:00Z',
+      from: '2026-10-09T10:00:00Z',
+      status: 'error',
+      agents: ['b', 'a'],
+      q: 'x',
+    })
+    expect(serialize(s)).toBe(
+      '?q=x&agent=b&agent=a&status=error&from=2026-10-09T10%3A00%3A00Z&to=2026-10-09T11%3A00%3A00Z&event=evt_1',
+    )
   })
 
   it('omits empty fields', () => {
@@ -106,6 +147,8 @@ describe('parse(serialize(x)) round trip', () => {
   const samples: [string, UrlState][] = [
     ['empty', empty],
     ['search only', state({ q: 'stripe' })],
+    ['time range', state({ from: '2026-10-09T10:00:00Z', to: '2026-10-09T11:30:00.500Z' })],
+    ['open-ended range with an offset', state({ from: '2026-10-09T10:00:00+05:30' })],
     [
       'everything',
       state({ q: 'refund', agents: ['billing-assistant', 'data-analyst'], status: 'blocked', eventId: 'evt_01M4G8' }),

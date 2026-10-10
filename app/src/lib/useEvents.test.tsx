@@ -2,6 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, renderHook, waitFor } from '@testing-library/react'
 import type { EventItem, EventsPage, Filters } from './api'
+import { EMPTY_FILTERS } from './api'
 import { fetchEvents } from './api'
 import { useEvents } from './useEvents'
 
@@ -21,9 +22,9 @@ interface Call {
 let calls: Call[] = []
 let rejectOnAbort = true
 
-const A: Filters = { q: 'a', agents: [], status: '' }
-const B: Filters = { q: 'b', agents: [], status: '' }
-const C: Filters = { q: 'c', agents: [], status: '' }
+const A: Filters = { ...EMPTY_FILTERS, q: 'a' }
+const B: Filters = { ...EMPTY_FILTERS, q: 'b' }
+const C: Filters = { ...EMPTY_FILTERS, q: 'c' }
 
 const ev = (id: string): EventItem => ({
   id,
@@ -130,6 +131,17 @@ describe('useEvents: changing filters', () => {
 
     expect(ids(result.current.items)).toEqual(['c1'])
     expect(result.current.loading).toBe(false)
+  })
+
+  it('refetches when only the time range changes, passing it to the API', async () => {
+    const { result, rerender } = setup(A)
+    await act(async () => last().resolve(page(['a1'])))
+    const ranged = { ...A, from: '2026-10-09T10:00:00Z', to: '2026-10-09T11:00:00Z' }
+    rerender({ f: ranged })
+    expect(result.current.refreshing).toBe(true)
+    expect(last().filters).toEqual(ranged)
+    await act(async () => last().resolve(page(['r1'])))
+    expect(ids(result.current.items)).toEqual(['r1'])
   })
 
   it('keeps showing the previous rows (marked refreshing) while the new filters load', async () => {

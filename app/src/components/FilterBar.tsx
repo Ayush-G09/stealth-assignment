@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { fetchAgents, type Filters, type Status } from '../lib/api'
+import { EMPTY_FILTERS, fetchAgents, type Filters, type Status } from '../lib/api'
+import { formatRangeLabel } from '../lib/timeRange'
 
 interface Props {
   filters: Filters
@@ -72,6 +73,15 @@ export function FilterBar({ filters, total, refreshing, onChange }: Props) {
       ? [{ key: 'status', label: `Status: ${filters.status}`, remove: () => onChange({ status: '' }) }]
       : []),
     ...filters.agents.map((a) => ({ key: `agent:${a}`, label: `Agent: ${a}`, remove: () => toggleAgent(a) })),
+    ...(filters.from || filters.to
+      ? [
+          {
+            key: 'range',
+            label: `Time: ${formatRangeLabel(filters)}`,
+            remove: () => onChange({ from: '', to: '' }),
+          },
+        ]
+      : []),
   ]
 
   return (
@@ -127,7 +137,7 @@ export function FilterBar({ filters, total, refreshing, onChange }: Props) {
             </li>
           ))}
           <li>
-            <button className="chip-clear" onClick={() => onChange({ q: '', agents: [], status: '' })}>
+            <button className="chip-clear" onClick={() => onChange(EMPTY_FILTERS)}>
               Clear all
             </button>
           </li>

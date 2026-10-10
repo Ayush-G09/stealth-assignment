@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { ApiError, fetchAgents, fetchEvent, fetchEvents, type Filters } from './api'
+import { ApiError, EMPTY_FILTERS, fetchAgents, fetchEvent, fetchEvents, type Filters } from './api'
 
-const noFilters: Filters = { q: '', agents: [], status: '' }
+const noFilters: Filters = EMPTY_FILTERS
 
 /** One scripted outcome per fetch call; the last step repeats if the client calls more often than scripted. */
 type Step = { json: unknown } | { status: number } | 'network' | 'malformed'
@@ -71,7 +71,7 @@ describe('request building', () => {
 
   it('sends q, status and cursor when set', async () => {
     scriptFetch({ json: { items: [], nextCursor: null, total: 0 } })
-    await fetchEvents({ q: 'stripe', agents: [], status: 'error' }, 'abc123', new AbortController().signal)
+    await fetchEvents({ ...noFilters, q: 'stripe', status: 'error' }, 'abc123', new AbortController().signal)
     expect(Object.fromEntries(urlOf().searchParams)).toEqual({
       limit: '100',
       q: 'stripe',
@@ -80,21 +80,33 @@ describe('request building', () => {
     })
   })
 
+  it('sends the time range as from/to', async () => {
+    scriptFetch({ json: { items: [], nextCursor: null, total: 0 } })
+    await fetchEvents(
+      { ...noFilters, from: '2026-10-09T10:00:00Z', to: '2026-10-09T11:00:00Z' },
+      null,
+      new AbortController().signal,
+    )
+    expect(urlOf().searchParams.get('from')).toBe('2026-10-09T10:00:00Z')
+    expect(urlOf().searchParams.get('to')).toBe('2026-10-09T11:00:00Z')
+  })
+
   it('repeats the agent param once per selected agent, in order', async () => {
     scriptFetch({ json: { items: [], nextCursor: null, total: 0 } })
-    await fetchEvents({ q: '', agents: ['b', 'a'], status: '' }, null, new AbortController().signal)
+    await fetchEvents({ ...noFilters, agents: ['b', 'a'] }, null, new AbortController().signal)
     expect(urlOf().searchParams.getAll('agent')).toEqual(['b', 'a'])
   })
 
   it('omits empty filters entirely', async () => {
     scriptFetch({ json: { items: [], nextCursor: null, total: 0 } })
     await fetchEvents(noFilters, null, new AbortController().signal)
-    for (const key of ['q', 'agent', 'status', 'cursor']) expect(urlOf().searchParams.has(key)).toBe(false)
+    for (const key of ['q', 'agent', 'status', 'from', 'to', 'cursor'])
+      expect(urlOf().searchParams.has(key)).toBe(false)
   })
 
   it('encodes special characters so they arrive intact', async () => {
     scriptFetch({ json: { items: [], nextCursor: null, total: 0 } })
-    await fetchEvents({ q: 'a&b=c d#e', agents: ['x y&z'], status: '' }, 'cur/sor+1', new AbortController().signal)
+    await fetchEvents({ ...noFilters, q: 'a&b=c d#e', agents: ['x y&z'] }, 'cur/sor+1', new AbortController().signal)
     expect(urlOf().searchParams.get('q')).toBe('a&b=c d#e')
     expect(urlOf().searchParams.get('agent')).toBe('x y&z')
     expect(urlOf().searchParams.get('cursor')).toBe('cur/sor+1')

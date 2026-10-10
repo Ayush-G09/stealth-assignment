@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Filters, Status } from './api'
+import { sanitizeRange } from './timeRange'
 
 export interface UrlState extends Filters {
   eventId: string | null
@@ -10,10 +11,13 @@ const STATUSES: Status[] = ['ok', 'blocked', 'error']
 export function parse(search: string): UrlState {
   const p = new URLSearchParams(search)
   const status = p.get('status') as Status | null
+  const range = sanitizeRange(p.get('from'), p.get('to'))
   return {
     q: p.get('q') ?? '',
     agents: p.getAll('agent').filter((a) => a !== ''), // a hand-edited "?agent=" is not a filter
     status: status && STATUSES.includes(status) ? status : '',
+    from: range.from,
+    to: range.to,
     eventId: p.get('event'),
   }
 }
@@ -23,6 +27,8 @@ export function serialize(s: UrlState): string {
   if (s.q) p.set('q', s.q)
   s.agents.forEach((a) => p.append('agent', a))
   if (s.status) p.set('status', s.status)
+  if (s.from) p.set('from', s.from)
+  if (s.to) p.set('to', s.to)
   if (s.eventId) p.set('event', s.eventId)
   const str = p.toString()
   return str ? `?${str}` : location.pathname

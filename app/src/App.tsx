@@ -3,16 +3,17 @@ import { DetailPanel } from './components/DetailPanel'
 import { EventTable } from './components/EventTable'
 import { ThemeToggle } from './components/ThemeToggle'
 import { FilterBar } from './components/FilterBar'
+import { EMPTY_FILTERS } from './lib/api'
 import { useEvents } from './lib/useEvents'
 import { useUrlState } from './lib/useUrlState'
 import './index.css'
 
 export default function App() {
   const [url, update] = useUrlState()
-  const filters = { q: url.q, agents: url.agents, status: url.status }
+  const filters = { q: url.q, agents: url.agents, status: url.status, from: url.from, to: url.to }
   const ev = useEvents(filters)
   const closePanel = useCallback(() => update({ eventId: null }), [update])
-  const clear = () => update({ q: '', agents: [], status: '' })
+  const clear = () => update(EMPTY_FILTERS)
 
   return (
     <div className="app">
@@ -34,7 +35,7 @@ export default function App() {
           onLoadMore={ev.loadMore}
           onRetry={ev.retry}
           onClearFilters={clear}
-          filtered={!!(url.q || url.agents.length || url.status)}
+          filtered={!!(url.q || url.agents.length || url.status || url.from || url.to)}
         />
       </main>
       {url.eventId && <DetailPanel key={url.eventId} id={url.eventId} onClose={closePanel} />}

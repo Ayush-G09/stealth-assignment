@@ -26,7 +26,11 @@ export interface Filters {
   q: string
   agents: string[]
   status: Status | ''
+  from: string // inclusive ISO timestamp, or ''
+  to: string // exclusive ISO timestamp, or ''
 }
+
+export const EMPTY_FILTERS: Filters = { q: '', agents: [], status: '', from: '', to: '' }
 
 const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:4000'
 
@@ -83,6 +87,8 @@ export function fetchEvents(filters: Filters, cursor: string | null, signal: Abo
   if (filters.q) p.set('q', filters.q)
   filters.agents.forEach((a) => p.append('agent', a))
   if (filters.status) p.set('status', filters.status)
+  if (filters.from) p.set('from', filters.from)
+  if (filters.to) p.set('to', filters.to)
   if (cursor) p.set('cursor', cursor)
   return getJson<EventsPage>(`/events?${p}`, signal)
 }
