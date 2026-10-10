@@ -1,5 +1,6 @@
 import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { EventItem } from '../lib/api'
+import { Highlight } from './Highlight'
 import { computeRange, scrollTopToReveal, type Range } from '../lib/virtual'
 
 // Fixed heights are what make the windowing math O(1); they must match the CSS (--row-h / --head-h).
@@ -13,6 +14,7 @@ const fmt = new Intl.DateTimeFormat(undefined, { dateStyle: 'short', timeStyle: 
 
 interface Props {
   items: EventItem[]
+  query: string
   total: number | null
   hasMore: boolean
   loadingMore: boolean
@@ -29,10 +31,16 @@ interface RowProps {
   index: number
   active: boolean
   selected: boolean
+  query: string
 }
 
+const STATUS_ICON = { ok: '✓', blocked: '⊘', error: '✕' } as const
+
+// Slow calls stand out; the API's timeout outliers are 30,000 ms.
+const latencyClass = (ms: number) => (ms >= 10_000 ? 'lat-very' : ms >= 1_000 ? 'lat-slow' : '')
+
 // Memoised so a scroll that shifts the window only mounts the new rows instead of re-rendering all of them.
-const Row = memo(function Row({ event, index, active, selected }: RowProps) {
+const Row = memo(function Row({ event, index, active, selected, query }: RowProps) {
   return (
     <div
       role="row"
@@ -42,11 +50,18 @@ const Row = memo(function Row({ event, index, active, selected }: RowProps) {
       aria-selected={selected}
       className={'vt-row' + (selected ? ' selected' : '') + (active ? ' active' : '')}
     >
-      <div role="gridcell">{fmt.format(new Date(event.timestamp))}</div>
-      <div role="gridcell">{event.agent}</div>
-      <div role="gridcell"><code>{event.tool}</code></div>
-      <div role="gridcell"><span className={`badge ${event.status}`}>{event.status}</span></div>
-      <div role="gridcell" className="num">{event.latencyMs} ms</div>
+      <div role="gridcell" className="time" title={event.timestamp}>{fmt.format(new Date(event.timestamp))}</div>
+      <div role="gridcell"><Highlight text={event.agent} query={query} /></div>
+      <div role="gridcell"><code><Highlight text={event.tool} query={query} /></code></div>
+      <div role="gridcell">
+        <span className={`badge ${event.status}`}>
+          <span aria-hidden="true">{STATUS_ICON[event.status]}</span> {event.status}
+        </span>
+      </div>
+      <div role="gridcell" className={`num ${latencyClass(event.latencyMs)}`}>{event.latencyMs.toLocaleString()} ms</div>
+      <div role="gridcell" className="args" title={event.argsPreview}>
+        <code><Highlight text={event.argsPreview} query={query} /></code>
+      </div>
     </div>
   )
 })
@@ -146,6 +161,7 @@ export function VirtualTable(p: Props) {
         <div role="columnheader">Tool</div>
         <div role="columnheader">Status</div>
         <div role="columnheader" className="num">Latency</div>
+        <div role="columnheader" className="args">Arguments</div>
       </div>
       <div className="vt-body" style={{ height: count * ROW_H }}>
         <div className="vt-window" style={{ transform: `translateY(${range.start * ROW_H}px)` }}>
@@ -158,6 +174,7 @@ export function VirtualTable(p: Props) {
                 index={index}
                 active={index === active}
                 selected={event.id === p.selectedId}
+                query={p.query}
               />
             )
           })}

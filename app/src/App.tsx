@@ -22,6 +22,7 @@ export default function App() {
         <EventTable
           {...ev}
           hasMore={!!ev.cursor}
+          query={url.q}
           selectedId={url.eventId}
           onSelect={(id) => update({ eventId: id })}
           onLoadMore={ev.loadMore}

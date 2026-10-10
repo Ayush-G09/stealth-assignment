@@ -4,6 +4,7 @@ import { VirtualTable } from './VirtualTable'
 interface Props {
   items: EventItem[]
   total: number | null
+  query: string
   loading: boolean
   loadingMore: boolean
   error: string | null
@@ -49,6 +50,7 @@ export function EventTable(p: Props) {
   return (
     <VirtualTable
       items={p.items}
+      query={p.query}
       total={p.total}
       hasMore={p.hasMore}
       loadingMore={p.loadingMore}
