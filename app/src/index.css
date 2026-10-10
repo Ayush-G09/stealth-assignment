@@ -96,3 +96,17 @@ pre { background: var(--surface); padding: 10px; border-radius: 6px; overflow: a
 .theme-toggle button[aria-pressed="true"] { background: var(--accent); color: var(--bg); font-weight: 600; }
 
 input::placeholder { color: var(--muted); opacity: 1; }
+
+/* Scrollbars: thin, rounded, theme-aware. Thumb is the muted text colour at partial opacity so it works in both themes. */
+:root { --scroll-thumb: color-mix(in srgb, var(--muted) 45%, transparent); --scroll-thumb-hover: color-mix(in srgb, var(--muted) 80%, transparent); }
+.vt, .panel-body, pre, main, .agent-list { scrollbar-gutter: stable; }
+@supports (-moz-appearance: none) {
+  .vt, .panel-body, pre, main, .agent-list { scrollbar-width: thin; scrollbar-color: var(--scroll-thumb) transparent; }
+}
+.vt::-webkit-scrollbar, .panel-body::-webkit-scrollbar, pre::-webkit-scrollbar, main::-webkit-scrollbar, .agent-list::-webkit-scrollbar { width: 12px; height: 12px; }
+.vt::-webkit-scrollbar-track, .panel-body::-webkit-scrollbar-track, pre::-webkit-scrollbar-track, main::-webkit-scrollbar-track, .agent-list::-webkit-scrollbar-track { background: transparent; }
+.vt::-webkit-scrollbar-thumb, .panel-body::-webkit-scrollbar-thumb, pre::-webkit-scrollbar-thumb, main::-webkit-scrollbar-thumb, .agent-list::-webkit-scrollbar-thumb {
+  background: var(--scroll-thumb); border-radius: 999px; border: 3px solid transparent; background-clip: content-box;
+}
+.vt::-webkit-scrollbar-thumb:hover, .panel-body::-webkit-scrollbar-thumb:hover, pre::-webkit-scrollbar-thumb:hover, main::-webkit-scrollbar-thumb:hover, .agent-list::-webkit-scrollbar-thumb:hover { background: var(--scroll-thumb-hover); background-clip: content-box; }
+.vt::-webkit-scrollbar-corner, pre::-webkit-scrollbar-corner { background: transparent; }
