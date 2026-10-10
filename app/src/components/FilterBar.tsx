@@ -33,9 +33,14 @@ export function FilterBar({ filters, total, onChange }: Props) {
   const toggleAgent = (a: string) =>
     onChange({ agents: filters.agents.includes(a) ? filters.agents.filter((x) => x !== a) : [...filters.agents, a] })
 
-  const active = filters.q || filters.agents.length || filters.status
+  const chips: { key: string; label: string; remove: () => void }[] = [
+    ...(filters.q ? [{ key: 'q', label: `Search: "${filters.q}"`, remove: () => onChange({ q: '' }) }] : []),
+    ...(filters.status ? [{ key: 'status', label: `Status: ${filters.status}`, remove: () => onChange({ status: '' }) }] : []),
+    ...filters.agents.map((a) => ({ key: `agent:${a}`, label: `Agent: ${a}`, remove: () => toggleAgent(a) })),
+  ]
 
   return (
+    <div className="filter-wrap">
     <div className="filters" role="search">
       <input
         type="search" aria-label="Search events" placeholder="Search agent, tool, args…"
@@ -61,10 +66,20 @@ export function FilterBar({ filters, total, onChange }: Props) {
           ))}
         </div>
       </details>
-      {active ? (
-        <button onClick={() => onChange({ q: '', agents: [], status: '' })}>Clear filters</button>
-      ) : null}
       <span className="count" aria-live="polite">{total !== null ? `${total.toLocaleString()} events` : ''}</span>
+    </div>
+    {chips.length > 0 && (
+      <ul className="chips" aria-label="Active filters">
+        {chips.map((c) => (
+          <li key={c.key}>
+            <button className="chip" onClick={c.remove} aria-label={`Remove filter: ${c.label}`}>
+              {c.label} <span aria-hidden="true">✕</span>
+            </button>
+          </li>
+        ))}
+        <li><button className="chip-clear" onClick={() => onChange({ q: '', agents: [], status: '' })}>Clear all</button></li>
+      </ul>
+    )}
     </div>
   )
 }

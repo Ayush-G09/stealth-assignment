@@ -12,7 +12,9 @@
 body { margin: 0; background: var(--bg); color: var(--fg); }
 .app { max-width: 1200px; margin: 0 auto; padding: 16px; height: 100dvh; display: flex; flex-direction: column; }
 main { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: auto; }
-h1 { font-size: 20px; margin: 0 0 12px; }
+header { margin-bottom: 12px; }
+h1 { font-size: 20px; margin: 0; }
+.subtitle { margin: 2px 0 0; }
 .filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
 input[type=search] { flex: 1 1 240px; }
 input[type=search], select, button, summary { padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--fg); font: inherit; }
@@ -60,3 +62,10 @@ dl { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; margi
 dt { color: var(--muted); } dd { margin: 0; word-break: break-all; }
 h3 { font-size: 13px; margin: 16px 0 6px; }
 pre { background: var(--surface); padding: 10px; border-radius: 6px; overflow: auto; max-height: 320px; margin: 0 0 8px; white-space: pre-wrap; word-break: break-all; }
+
+.filter-wrap { margin-bottom: 12px; }
+.filter-wrap .filters { margin-bottom: 8px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; margin: 0; padding: 0; align-items: center; }
+.chip { padding: 2px 10px; border-radius: 999px; background: var(--selected); border-color: transparent; font-size: 13px; }
+.chip:hover { border-color: var(--accent); }
+.chip-clear { border: 0; background: none; color: var(--accent); text-decoration: underline; padding: 2px 6px; font-size: 13px; }

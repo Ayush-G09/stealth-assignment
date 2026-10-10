@@ -16,7 +16,10 @@ export default function App() {
 
   return (
     <div className="app">
-      <header><h1>Agent Activity Explorer</h1></header>
+      <header>
+        <h1>Agent Activity Explorer</h1>
+        <p className="muted subtitle">Browse, search and inspect tool calls made by your AI agents.</p>
+      </header>
       <FilterBar filters={filters} total={ev.total} onChange={onChange} />
       <main>
         <EventTable
