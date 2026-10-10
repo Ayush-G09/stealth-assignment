@@ -125,15 +125,23 @@ function renderResults(query) {
   rememberViewed(page);
 }
 
+// Shrink overflowing summaries (14px down to 11px). Every summary sits in the same grid track, so
+// the width is read from the DOM once and text widths are measured on a canvas. That avoids a
+// forced layout per cell (the old write-font-size / read-scrollWidth loop).
+const measureCtx = document.createElement('canvas').getContext('2d');
+
 function fitSummaries() {
-  resultsList.querySelectorAll('.result-summary').forEach((cell) => {
+  const cells = resultsList.querySelectorAll('.result-summary');
+  if (!cells.length) return;
+  const available = cells[0].clientWidth;
+  measureCtx.font = '14px ' + getComputedStyle(cells[0]).fontFamily;
+  const sizes = Array.from(cells, (cell) => {
+    const width = measureCtx.measureText(cell.textContent).width;
     let size = 14;
-    cell.style.fontSize = size + 'px';
-    while (cell.scrollWidth > cell.clientWidth && size > 11) {
-      size -= 0.5;
-      cell.style.fontSize = size + 'px';
-    }
+    while (size > 11 && (width * size) / 14 > available - 1) size -= 0.5;
+    return size;
   });
+  cells.forEach((cell, i) => { cell.style.fontSize = sizes[i] + 'px'; });
 }
 
 function onScroll() {
@@ -251,3 +259,6 @@ renderResults('');
 
 // Warm the search index after first paint so the first keystroke is not the slow one.
 (window.requestIdleCallback || setTimeout)(buildHaystacks);
+
+// Text metrics change once the web font arrives, so fit again then.
+document.fonts.ready.then(fitSummaries);
