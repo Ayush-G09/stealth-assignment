@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { fetchEvent, type EventDetail } from '../lib/api'
+import { ApiError, fetchEvent, type EventDetail } from '../lib/api'
 
 interface Props {
   id: string
@@ -11,6 +11,7 @@ const SLOW_MS = 3000
 export function DetailPanel({ id, onClose }: Props) {
   const [event, setEvent] = useState<EventDetail | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [notFound, setNotFound] = useState(false)
   const [slow, setSlow] = useState(false)
   const [attempt, setAttempt] = useState(0)
   const closeBtn = useRef<HTMLButtonElement>(null)
@@ -19,14 +20,16 @@ export function DetailPanel({ id, onClose }: Props) {
   // fetch; abort when id changes or panel closes so a slow earlier event can't overwrite a newer one
   useEffect(() => {
     const c = new AbortController()
-    setEvent(null); setError(null); setSlow(false)
+    setEvent(null); setError(null); setNotFound(false); setSlow(false)
     const t = setTimeout(() => setSlow(true), SLOW_MS)
     fetchEvent(id, c.signal)
       .then((e) => { clearTimeout(t); setSlow(false); setEvent(e) })
       .catch((e: Error) => {
         if (e.name === 'AbortError') return
         clearTimeout(t); setSlow(false)
-        setError(e instanceof Error && e.message.includes('404') ? 'This event no longer exists.' : e.message)
+        const missing = e instanceof ApiError && e.status === 404
+        setNotFound(missing)
+        setError(missing ? 'This event no longer exists.' : e.message)
       })
     return () => { c.abort(); clearTimeout(t) }
   }, [id, attempt])
@@ -56,8 +59,10 @@ export function DetailPanel({ id, onClose }: Props) {
         )}
         {error && (
           <div role="alert">
-            <p>Couldn't load this event: {error}</p>
-            <button onClick={() => setAttempt((n) => n + 1)}>Try again</button>
+            <p>{notFound ? error : `Couldn't load this event: ${error}`}</p>
+            {notFound
+              ? <button onClick={close}>Close</button> // retrying a missing event can't succeed
+              : <button onClick={() => setAttempt((n) => n + 1)}>Try again</button>}
           </div>
         )}
         {event && (
