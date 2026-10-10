@@ -47,7 +47,6 @@ export function useUrlState() {
     return () => window.removeEventListener('popstate', onPop)
   }, [])
 
-
   const update = useCallback((patch: Partial<UrlState>, mode: 'push' | 'replace' = 'push') => {
     const next = { ...ref.current, ...patch }
     ref.current = next

@@ -50,17 +50,29 @@ const Row = memo(function Row({ event, index, active, selected, query }: RowProp
       aria-selected={selected}
       className={'vt-row' + (selected ? ' selected' : '') + (active ? ' active' : '')}
     >
-      <div role="gridcell" className="time" title={event.timestamp}>{fmt.format(new Date(event.timestamp))}</div>
-      <div role="gridcell"><Highlight text={event.agent} query={query} /></div>
-      <div role="gridcell"><code><Highlight text={event.tool} query={query} /></code></div>
+      <div role="gridcell" className="time" title={event.timestamp}>
+        {fmt.format(new Date(event.timestamp))}
+      </div>
+      <div role="gridcell">
+        <Highlight text={event.agent} query={query} />
+      </div>
+      <div role="gridcell">
+        <code>
+          <Highlight text={event.tool} query={query} />
+        </code>
+      </div>
       <div role="gridcell">
         <span className={`badge ${event.status}`}>
           <span aria-hidden="true">{STATUS_ICON[event.status]}</span> {event.status}
         </span>
       </div>
-      <div role="gridcell" className={`num ${latencyClass(event.latencyMs)}`}>{event.latencyMs.toLocaleString()} ms</div>
+      <div role="gridcell" className={`num ${latencyClass(event.latencyMs)}`}>
+        {event.latencyMs.toLocaleString()} ms
+      </div>
       <div role="gridcell" className="args" title={event.argsPreview}>
-        <code><Highlight text={event.argsPreview} query={query} /></code>
+        <code>
+          <Highlight text={event.argsPreview} query={query} />
+        </code>
       </div>
     </div>
   )
@@ -85,7 +97,10 @@ export function VirtualTable(p: Props) {
   useLayoutEffect(() => {
     const el = scroller.current
     if (!el) return
-    const measure = () => { viewH.current = el.clientHeight; updateRange() }
+    const measure = () => {
+      viewH.current = el.clientHeight
+      updateRange()
+    }
     measure()
     const ro = new ResizeObserver(measure)
     ro.observe(el)
@@ -116,17 +131,30 @@ export function VirtualTable(p: Props) {
   const onKeyDown = (e: React.KeyboardEvent) => {
     const page = Math.max(1, Math.floor((viewH.current - HEAD_H) / ROW_H) - 1)
     switch (e.key) {
-      case 'ArrowDown': moveTo(active + 1); break
-      case 'ArrowUp': moveTo(active - 1); break
-      case 'PageDown': moveTo(active + page); break
-      case 'PageUp': moveTo(active - page); break
-      case 'Home': moveTo(0); break
-      case 'End': moveTo(count - 1); break
+      case 'ArrowDown':
+        moveTo(active + 1)
+        break
+      case 'ArrowUp':
+        moveTo(active - 1)
+        break
+      case 'PageDown':
+        moveTo(active + page)
+        break
+      case 'PageUp':
+        moveTo(active - page)
+        break
+      case 'Home':
+        moveTo(0)
+        break
+      case 'End':
+        moveTo(count - 1)
+        break
       case 'Enter':
       case ' ':
         if (p.items[active]) p.onSelect(p.items[active].id)
         break
-      default: return
+      default:
+        return
     }
     e.preventDefault()
   }
@@ -145,57 +173,66 @@ export function VirtualTable(p: Props) {
 
   return (
     <div className={'vt-wrap' + (p.refreshing ? ' is-refreshing' : '')}>
-    <div
-      ref={scroller}
-      className="vt"
-      role="grid"
-      aria-label="Agent events"
-      aria-busy={p.refreshing}
-      aria-rowcount={(p.total ?? count) + 1}
-      aria-activedescendant={activeEvent ? `ev-${activeEvent.id}` : undefined}
-      tabIndex={0}
-      onScroll={updateRange}
-      onKeyDown={onKeyDown}
-      onClick={onClick}
-    >
-      <div className="vt-head" role="row" aria-rowindex={1}>
-        <div role="columnheader">Time</div>
-        <div role="columnheader">Agent</div>
-        <div role="columnheader">Tool</div>
-        <div role="columnheader">Status</div>
-        <div role="columnheader" className="num">Latency</div>
-        <div role="columnheader" className="args">Arguments</div>
-      </div>
-      <div className="vt-body" style={{ height: count * ROW_H }}>
-        <div className="vt-window" style={{ transform: `translateY(${range.start * ROW_H}px)` }}>
-          {rows.map((event, i) => {
-            const index = range.start + i
-            return (
-              <Row
-                key={event.id}
-                event={event}
-                index={index}
-                active={index === active}
-                selected={event.id === p.selectedId}
-                query={p.query}
-              />
-            )
-          })}
+      <div
+        ref={scroller}
+        className="vt"
+        role="grid"
+        aria-label="Agent events"
+        aria-busy={p.refreshing}
+        aria-rowcount={(p.total ?? count) + 1}
+        aria-activedescendant={activeEvent ? `ev-${activeEvent.id}` : undefined}
+        tabIndex={0}
+        onScroll={updateRange}
+        onKeyDown={onKeyDown}
+        onClick={onClick}
+      >
+        <div className="vt-head" role="row" aria-rowindex={1}>
+          <div role="columnheader">Time</div>
+          <div role="columnheader">Agent</div>
+          <div role="columnheader">Tool</div>
+          <div role="columnheader">Status</div>
+          <div role="columnheader" className="num">
+            Latency
+          </div>
+          <div role="columnheader" className="args">
+            Arguments
+          </div>
+        </div>
+        <div className="vt-body" style={{ height: count * ROW_H }}>
+          <div className="vt-window" style={{ transform: `translateY(${range.start * ROW_H}px)` }}>
+            {rows.map((event, i) => {
+              const index = range.start + i
+              return (
+                <Row
+                  key={event.id}
+                  event={event}
+                  index={index}
+                  active={index === active}
+                  selected={event.id === p.selectedId}
+                  query={p.query}
+                />
+              )
+            })}
+          </div>
         </div>
       </div>
-    </div>
       <div className="vt-foot" role="status" aria-live="polite">
-        {p.refreshing && (
-          <span>{p.slow ? 'Still updating, slow connection…' : 'Updating results…'}</span>
-        )}
+        {p.refreshing && <span>{p.slow ? 'Still updating, slow connection…' : 'Updating results…'}</span>}
         {p.loadingMore && <span>{p.slow ? 'Still loading, slow connection…' : 'Loading more…'}</span>}
         {p.moreError && (
-          <span>Couldn't load more ({p.moreError}) <button onClick={p.onRetry}>Retry</button></span>
+          <span>
+            Couldn't load more ({p.moreError}) <button onClick={p.onRetry}>Retry</button>
+          </span>
         )}
         {!p.refreshing && p.hasMore && !p.loadingMore && !p.moreError && (
-          <span className="muted">Showing {count.toLocaleString()}{p.total ? ` of ${p.total.toLocaleString()}` : ''} events</span>
+          <span className="muted">
+            Showing {count.toLocaleString()}
+            {p.total ? ` of ${p.total.toLocaleString()}` : ''} events
+          </span>
         )}
-        {!p.refreshing && !p.hasMore && !p.loadingMore && <span className="muted">End of results ({count.toLocaleString()} events)</span>}
+        {!p.refreshing && !p.hasMore && !p.loadingMore && (
+          <span className="muted">End of results ({count.toLocaleString()} events)</span>
+        )}
       </div>
     </div>
   )

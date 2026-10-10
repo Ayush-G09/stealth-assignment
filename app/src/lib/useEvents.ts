@@ -14,8 +14,15 @@ interface State {
 }
 
 const blank = (forKey: string): State => ({
-  forKey, items: [], total: null, cursor: null,
-  loading: true, loadingMore: false, error: null, moreError: null, slowKey: null,
+  forKey,
+  items: [],
+  total: null,
+  cursor: null,
+  loading: true,
+  loadingMore: false,
+  error: null,
+  moreError: null,
+  slowKey: null,
 })
 
 const SLOW_MS = 3000
@@ -62,7 +69,11 @@ export function useEvents(filters: Filters) {
             items: first ? page.items : [...b.items, ...page.items],
             total: page.total,
             cursor: page.nextCursor,
-            loading: false, loadingMore: false, error: null, moreError: null, slowKey: null,
+            loading: false,
+            loadingMore: false,
+            error: null,
+            moreError: null,
+            slowKey: null,
           }
         })
       })
@@ -82,7 +93,10 @@ export function useEvents(filters: Filters) {
   // New filters -> fetch the first page. No synchronous setState here: the view below is derived from `key`.
   useEffect(() => {
     run(key, null)
-    return () => { ctrl.current?.abort(); clearTimeout(slowTimer.current) }
+    return () => {
+      ctrl.current?.abort()
+      clearTimeout(slowTimer.current)
+    }
   }, [key, run])
 
   const loadMore = useCallback(() => {

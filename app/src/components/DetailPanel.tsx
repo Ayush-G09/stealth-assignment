@@ -24,15 +24,23 @@ export function DetailPanel({ id, onClose }: Props) {
     const c = new AbortController()
     const t = setTimeout(() => setSlow(true), SLOW_MS)
     fetchEvent(id, c.signal)
-      .then((e) => { clearTimeout(t); setSlow(false); setEvent(e) })
+      .then((e) => {
+        clearTimeout(t)
+        setSlow(false)
+        setEvent(e)
+      })
       .catch((e: Error) => {
         if (e.name === 'AbortError') return
-        clearTimeout(t); setSlow(false)
+        clearTimeout(t)
+        setSlow(false)
         const missing = e instanceof ApiError && e.status === 404
         setNotFound(missing)
         setError(missing ? 'This event no longer exists.' : e.message)
       })
-    return () => { c.abort(); clearTimeout(t) }
+    return () => {
+      c.abort()
+      clearTimeout(t)
+    }
   }, [id, attempt])
 
   const retry = () => {
@@ -54,13 +62,20 @@ export function DetailPanel({ id, onClose }: Props) {
       if (e.key === 'Escape') return close()
       if (e.key !== 'Tab') return
       // Focus trap: the page behind is blurred and blocked, so Tab must cycle inside the panel.
-      const focusables = panel.current?.querySelectorAll<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')
+      const focusables = panel.current?.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      )
       if (!focusables?.length) return
       const first = focusables[0]
       const last = focusables[focusables.length - 1]
       const inside = panel.current?.contains(document.activeElement)
-      if (e.shiftKey && (document.activeElement === first || !inside)) { e.preventDefault(); last.focus() }
-      else if (!e.shiftKey && (document.activeElement === last || !inside)) { e.preventDefault(); first.focus() }
+      if (e.shiftKey && (document.activeElement === first || !inside)) {
+        e.preventDefault()
+        last.focus()
+      } else if (!e.shiftKey && (document.activeElement === last || !inside)) {
+        e.preventDefault()
+        first.focus()
+      }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -68,48 +83,70 @@ export function DetailPanel({ id, onClose }: Props) {
 
   return (
     <>
-    <div className="backdrop" onClick={close} aria-hidden="true" />
-    <div ref={panel} className="panel" role="dialog" aria-modal="true" aria-label="Event details">
-      <div className="panel-head">
-        <h2>Event details</h2>
-        <button ref={closeBtn} onClick={close} aria-label="Close details (Esc)">✕</button>
+      <div className="backdrop" onClick={close} aria-hidden="true" />
+      <div ref={panel} className="panel" role="dialog" aria-modal="true" aria-label="Event details">
+        <div className="panel-head">
+          <h2>Event details</h2>
+          <button ref={closeBtn} onClick={close} aria-label="Close details (Esc)">
+            ✕
+          </button>
+        </div>
+        <div className="panel-body" aria-live="polite">
+          {!event && !error && (
+            <p className="muted">{slow ? 'Still loading, this is slower than usual…' : 'Loading event…'}</p>
+          )}
+          {error && (
+            <div role="alert">
+              <p>{notFound ? error : `Couldn't load this event: ${error}`}</p>
+              {notFound ? (
+                <button onClick={close}>Close</button> // retrying a missing event can't succeed
+              ) : (
+                <button onClick={retry}>Try again</button>
+              )}
+            </div>
+          )}
+          {event && (
+            <>
+              <dl>
+                <dt>ID</dt>
+                <dd>
+                  <code>{event.id}</code> <CopyButton text={event.id} label="Copy event ID" />
+                </dd>
+                <dt>Time</dt>
+                <dd>{new Date(event.timestamp).toLocaleString()}</dd>
+                <dt>Agent</dt>
+                <dd>{event.agent}</dd>
+                <dt>Tool</dt>
+                <dd>
+                  <code>{event.tool}</code>
+                </dd>
+                <dt>Status</dt>
+                <dd>
+                  <span className={`badge ${event.status}`}>{event.status}</span>
+                </dd>
+                <dt>Latency</dt>
+                <dd>{event.latencyMs.toLocaleString()} ms</dd>
+                <dt>Policy matches</dt>
+                <dd>
+                  {event.policyMatches?.length ? (
+                    event.policyMatches.map((m) => (
+                      <span key={m} className="tag">
+                        {m}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="muted">none</span>
+                  )}
+                </dd>
+              </dl>
+              <h3>Args</h3>
+              <Json value={event.args} label="Copy args" />
+              <h3>Result</h3>
+              <Json value={event.result} label="Copy result" />
+            </>
+          )}
+        </div>
       </div>
-      <div className="panel-body" aria-live="polite">
-        {!event && !error && (
-          <p className="muted">{slow ? 'Still loading, this is slower than usual…' : 'Loading event…'}</p>
-        )}
-        {error && (
-          <div role="alert">
-            <p>{notFound ? error : `Couldn't load this event: ${error}`}</p>
-            {notFound
-              ? <button onClick={close}>Close</button> // retrying a missing event can't succeed
-              : <button onClick={retry}>Try again</button>}
-          </div>
-        )}
-        {event && (
-          <>
-            <dl>
-              <dt>ID</dt><dd><code>{event.id}</code> <CopyButton text={event.id} label="Copy event ID" /></dd>
-              <dt>Time</dt><dd>{new Date(event.timestamp).toLocaleString()}</dd>
-              <dt>Agent</dt><dd>{event.agent}</dd>
-              <dt>Tool</dt><dd><code>{event.tool}</code></dd>
-              <dt>Status</dt><dd><span className={`badge ${event.status}`}>{event.status}</span></dd>
-              <dt>Latency</dt><dd>{event.latencyMs.toLocaleString()} ms</dd>
-              <dt>Policy matches</dt>
-              <dd>
-                {event.policyMatches?.length
-                  ? event.policyMatches.map((m) => <span key={m} className="tag">{m}</span>)
-                  : <span className="muted">none</span>}
-              </dd>
-            </dl>
-            <h3>Args</h3>
-            <Json value={event.args} label="Copy args" />
-            <h3>Result</h3>
-            <Json value={event.result} label="Copy result" />
-          </>
-        )}
-      </div>
-    </div>
     </>
   )
 }

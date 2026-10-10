@@ -26,10 +26,18 @@ const B: Filters = { q: 'b', agents: [], status: '' }
 const C: Filters = { q: 'c', agents: [], status: '' }
 
 const ev = (id: string): EventItem => ({
-  id, timestamp: '2026-10-09T00:00:00.000Z', agent: 'x', tool: 't', status: 'ok', latencyMs: 1, argsPreview: '{}',
+  id,
+  timestamp: '2026-10-09T00:00:00.000Z',
+  agent: 'x',
+  tool: 't',
+  status: 'ok',
+  latencyMs: 1,
+  argsPreview: '{}',
 })
 const page = (ids: string[], next: string | null = null, total = 100): EventsPage => ({
-  items: ids.map(ev), nextCursor: next, total,
+  items: ids.map(ev),
+  nextCursor: next,
+  total,
 })
 const ids = (items: EventItem[]) => items.map((i) => i.id)
 const last = () => calls[calls.length - 1]
@@ -86,7 +94,9 @@ describe('useEvents: first load', () => {
     vi.useFakeTimers()
     const { result } = setup()
     expect(result.current.slow).toBe(false)
-    await act(async () => { vi.advanceTimersByTime(3100) })
+    await act(async () => {
+      vi.advanceTimersByTime(3100)
+    })
     expect(result.current.slow).toBe(true)
     await act(async () => last().resolve(page(['1'])))
     expect(result.current.slow).toBe(false)
@@ -113,7 +123,10 @@ describe('useEvents: changing filters', () => {
     await act(async () => callC.resolve(page(['c1'])))
     // B and A settle late; their promises still resolve (the network answered before the abort took effect).
     rejectOnAbort = false
-    await act(async () => { callB.resolve(page(['b1'])); callA.resolve(page(['a1'])) })
+    await act(async () => {
+      callB.resolve(page(['b1']))
+      callA.resolve(page(['a1']))
+    })
 
     expect(ids(result.current.items)).toEqual(['c1'])
     expect(result.current.loading).toBe(false)
@@ -171,7 +184,9 @@ describe('useEvents: changing filters', () => {
     await act(async () => last().resolve(page(['a1'])))
     rerender({ f: B })
     expect(result.current.slow).toBe(false)
-    await act(async () => { vi.advanceTimersByTime(3100) })
+    await act(async () => {
+      vi.advanceTimersByTime(3100)
+    })
     expect(result.current.refreshing).toBe(true)
     expect(result.current.slow).toBe(true)
   })
@@ -193,7 +208,10 @@ describe('useEvents: paging', () => {
   it('ignores loadMore while a page is already loading (no duplicate requests)', async () => {
     const { result } = setup()
     await act(async () => last().resolve(page(['1'], 'c1')))
-    act(() => { result.current.loadMore(); result.current.loadMore() })
+    act(() => {
+      result.current.loadMore()
+      result.current.loadMore()
+    })
     expect(calls.filter((c) => c.cursor === 'c1')).toHaveLength(1)
   })
 

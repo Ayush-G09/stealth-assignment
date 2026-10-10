@@ -35,14 +35,21 @@ function TableSkeleton({ slow }: { slow: boolean }) {
     <div className="vt-wrap">
       <div className="vt vt-skeleton" aria-hidden="true">
         <div className="vt-head">
-          <div>Time</div><div>Agent</div><div>Tool</div><div>Status</div>
-          <div className="num">Latency</div><div className="args">Arguments</div>
+          <div>Time</div>
+          <div>Agent</div>
+          <div>Tool</div>
+          <div>Status</div>
+          <div className="num">Latency</div>
+          <div className="args">Arguments</div>
         </div>
         {Array.from({ length: 14 }, (_, row) => (
           <div key={row} className="vt-row sk-row">
             {BAR_WIDTHS[row % BAR_WIDTHS.length].map((w, col) => (
               <div key={col} className={col === 4 ? 'num' : col === 5 ? 'args' : undefined}>
-                <span className={'sk-bar' + (col === 3 ? ' sk-pill' : '')} style={col === 3 ? undefined : { width: `${w}%` }} />
+                <span
+                  className={'sk-bar' + (col === 3 ? ' sk-pill' : '')}
+                  style={col === 3 ? undefined : { width: `${w}%` }}
+                />
               </div>
             ))}
           </div>

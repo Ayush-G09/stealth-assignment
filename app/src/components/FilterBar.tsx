@@ -18,8 +18,13 @@ export function FilterBar({ filters, total, refreshing, onChange }: Props) {
   useEffect(() => {
     const c = new AbortController()
     fetchAgents(c.signal)
-      .then((list) => { setAgents(list); setAgentsFailed(false) })
-      .catch((e: Error) => { if (e.name !== 'AbortError') setAgentsFailed(true) })
+      .then((list) => {
+        setAgents(list)
+        setAgentsFailed(false)
+      })
+      .catch((e: Error) => {
+        if (e.name !== 'AbortError') setAgentsFailed(true)
+      })
     return () => c.abort()
   }, [attempt])
 
@@ -63,58 +68,71 @@ export function FilterBar({ filters, total, refreshing, onChange }: Props) {
 
   const chips: { key: string; label: string; remove: () => void }[] = [
     ...(filters.q ? [{ key: 'q', label: `Search: "${filters.q}"`, remove: () => onChange({ q: '' }) }] : []),
-    ...(filters.status ? [{ key: 'status', label: `Status: ${filters.status}`, remove: () => onChange({ status: '' }) }] : []),
+    ...(filters.status
+      ? [{ key: 'status', label: `Status: ${filters.status}`, remove: () => onChange({ status: '' }) }]
+      : []),
     ...filters.agents.map((a) => ({ key: `agent:${a}`, label: `Agent: ${a}`, remove: () => toggleAgent(a) })),
   ]
 
   return (
     <div className="filter-wrap" role="search">
-    <div className="filters">
-      <input
-        type="search" aria-label="Search events" placeholder="Search agent, tool, args…"
-        value={text} onChange={(e) => setText(e.target.value)}
-      />
-      <select
-        aria-label="Status" value={filters.status}
-        onChange={(e) => onChange({ status: e.target.value as Status | '' })}
-      >
-        <option value="">All statuses</option>
-        <option value="ok">ok</option>
-        <option value="blocked">blocked</option>
-        <option value="error">error</option>
-      </select>
-      <details className="agent-menu" ref={menu}>
-        <summary>
-          Agents{filters.agents.length ? ` (${filters.agents.length})` : ''}
-          {agentsFailed && (
-            <span className="warn" title="Couldn't load the agent list">
-              {' '}⚠<span className="sr-only"> Couldn't load the agent list. Open the menu to retry.</span>
-            </span>
-          )}
-        </summary>
-        <div className="agent-list">
-          {agentsFailed && <button onClick={() => setAttempt((n) => n + 1)}>Couldn't load agents, retry</button>}
-          {agents.map((a) => (
-            <label key={a}>
-              <input type="checkbox" checked={filters.agents.includes(a)} onChange={() => toggleAgent(a)} /> {a}
-            </label>
+      <div className="filters">
+        <input
+          type="search"
+          aria-label="Search events"
+          placeholder="Search agent, tool, args…"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+        />
+        <select
+          aria-label="Status"
+          value={filters.status}
+          onChange={(e) => onChange({ status: e.target.value as Status | '' })}
+        >
+          <option value="">All statuses</option>
+          <option value="ok">ok</option>
+          <option value="blocked">blocked</option>
+          <option value="error">error</option>
+        </select>
+        <details className="agent-menu" ref={menu}>
+          <summary>
+            Agents{filters.agents.length ? ` (${filters.agents.length})` : ''}
+            {agentsFailed && (
+              <span className="warn" title="Couldn't load the agent list">
+                {' '}
+                ⚠<span className="sr-only"> Couldn't load the agent list. Open the menu to retry.</span>
+              </span>
+            )}
+          </summary>
+          <div className="agent-list">
+            {agentsFailed && <button onClick={() => setAttempt((n) => n + 1)}>Couldn't load agents, retry</button>}
+            {agents.map((a) => (
+              <label key={a}>
+                <input type="checkbox" checked={filters.agents.includes(a)} onChange={() => toggleAgent(a)} /> {a}
+              </label>
+            ))}
+          </div>
+        </details>
+        <span className="count" aria-live="polite">
+          {refreshing ? 'Updating…' : total !== null ? `${total.toLocaleString()} events` : ''}
+        </span>
+      </div>
+      {chips.length > 0 && (
+        <ul className="chips" aria-label="Active filters">
+          {chips.map((c) => (
+            <li key={c.key}>
+              <button className="chip" onClick={c.remove} aria-label={`Remove filter: ${c.label}`}>
+                {c.label} <span aria-hidden="true">✕</span>
+              </button>
+            </li>
           ))}
-        </div>
-      </details>
-      <span className="count" aria-live="polite">{refreshing ? 'Updating…' : total !== null ? `${total.toLocaleString()} events` : ''}</span>
-    </div>
-    {chips.length > 0 && (
-      <ul className="chips" aria-label="Active filters">
-        {chips.map((c) => (
-          <li key={c.key}>
-            <button className="chip" onClick={c.remove} aria-label={`Remove filter: ${c.label}`}>
-              {c.label} <span aria-hidden="true">✕</span>
+          <li>
+            <button className="chip-clear" onClick={() => onChange({ q: '', agents: [], status: '' })}>
+              Clear all
             </button>
           </li>
-        ))}
-        <li><button className="chip-clear" onClick={() => onChange({ q: '', agents: [], status: '' })}>Clear all</button></li>
-      </ul>
-    )}
+        </ul>
+      )}
     </div>
   )
 }

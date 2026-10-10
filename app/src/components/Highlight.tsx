@@ -9,9 +9,5 @@ export const Highlight = memo(function Highlight({ text, query }: { text: string
   const parts = text.split(new RegExp(`(${escapeRe(q)})`, 'ig'))
   if (parts.length === 1) return <>{text}</>
   const needle = q.toLowerCase()
-  return (
-    <>
-      {parts.map((part, i) => (part.toLowerCase() === needle ? <mark key={i}>{part}</mark> : part))}
-    </>
-  )
+  return <>{parts.map((part, i) => (part.toLowerCase() === needle ? <mark key={i}>{part}</mark> : part))}</>
 })
