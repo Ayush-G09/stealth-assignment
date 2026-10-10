@@ -1,4 +1,5 @@
 import { useCallback } from 'react'
+import { DetailPanel } from './components/DetailPanel'
 import { EventTable } from './components/EventTable'
 import { FilterBar } from './components/FilterBar'
 import { useEvents } from './lib/useEvents'
@@ -10,6 +11,7 @@ export default function App() {
   const filters = { q: url.q, agents: url.agents, status: url.status }
   const ev = useEvents(filters)
   const onChange = useCallback(update, [update])
+  const closePanel = useCallback(() => update({ eventId: null }), [update])
   const clear = () => update({ q: '', agents: [], status: '' })
 
   return (
@@ -28,6 +30,7 @@ export default function App() {
           filtered={!!(url.q || url.agents.length || url.status)}
         />
       </main>
+      {url.eventId && <DetailPanel key={url.eventId} id={url.eventId} onClose={closePanel} />}
     </div>
   )
 }
