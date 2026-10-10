@@ -144,28 +144,52 @@ function fitSummaries() {
   cells.forEach((cell, i) => { cell.style.fontSize = sizes[i] + 'px'; });
 }
 
-function onScroll() {
+// Calls per UTC minute, counted once (the old handler re-scanned all 100k events on every scroll event).
+let minuteCounts = null;
+
+function callsInMinute(minute) {
+  if (!minuteCounts) {
+    minuteCounts = new Map();
+    for (const event of window.ACTIVITY) {
+      const key = event.timestamp.slice(11, 16);
+      minuteCounts.set(key, (minuteCounts.get(key) || 0) + 1);
+    }
+  }
+  return minuteCounts.get(minute) || 0;
+}
+
+let focusedRows = [];
+let scrollFrame = 0;
+
+// Runs at most once per frame. All layout reads happen before any write.
+function updateOnScroll() {
+  scrollFrame = 0;
   const scrolled = window.scrollY;
-  const max = document.documentElement.scrollHeight - window.innerHeight;
+  const viewport = window.innerHeight;
+  const max = document.documentElement.scrollHeight - viewport;
+
+  const rows = resultsList.children;
+  const focused = [];
+  for (const row of rows) {
+    const top = row.getBoundingClientRect().top;
+    if (top > viewport * 0.3 && top < viewport * 0.6) focused.push(row);
+  }
+
   progress.style.width = (max > 0 ? (scrolled / max) * 100 : 0) + '%';
   topbar.classList.toggle('topbar-raised', scrolled > 8);
-  topbar.style.paddingBlock = Math.max(6, 12 - scrolled / 20) + 'px';
-  backToTop.classList.toggle('visible', scrolled > window.innerHeight);
-  resultsList.querySelectorAll('.result-row').forEach((row) => {
-    row.classList.remove('in-focus');
-    const rect = row.getBoundingClientRect();
-    if (rect.top > window.innerHeight * 0.3 && rect.top < window.innerHeight * 0.6) {
-      row.classList.add('in-focus');
-    }
-  });
-  const focused = resultsList.querySelector('.in-focus');
-  if (focused) {
-    const minute = focused.dataset.minute;
-    const sameMinute = window.ACTIVITY.filter((event) => new Date(event.timestamp).toISOString().slice(11, 16) === minute).length;
-    scrollContext.textContent = minute + ' UTC · ' + sameMinute + ' calls that minute';
-  } else {
-    scrollContext.textContent = '';
+  backToTop.classList.toggle('visible', scrolled > viewport);
+
+  if (focused.length !== focusedRows.length || focused.some((row, i) => row !== focusedRows[i])) {
+    focusedRows.forEach((row) => row.classList.remove('in-focus'));
+    focused.forEach((row) => row.classList.add('in-focus'));
+    focusedRows = focused;
+    const minute = focused.length ? focused[0].dataset.minute : null;
+    scrollContext.textContent = minute ? minute + ' UTC · ' + callsInMinute(minute) + ' calls that minute' : '';
   }
+}
+
+function onScroll() {
+  if (!scrollFrame) scrollFrame = requestAnimationFrame(updateOnScroll);
 }
 
 function hidePreview() {
@@ -243,7 +267,7 @@ searchInput.addEventListener('input', () => {
   clearTimeout(searchTimer);
   searchTimer = setTimeout(() => renderResults(searchInput.value), 150);
 });
-window.addEventListener('scroll', onScroll);
+window.addEventListener('scroll', onScroll, { passive: true });
 window.addEventListener('resize', equalizeCardHeights);
 window.addEventListener('resize', fitSummaries);
 resultsList.addEventListener('mousemove', showPreview);
