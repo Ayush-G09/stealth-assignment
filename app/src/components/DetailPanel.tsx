@@ -15,6 +15,7 @@ export function DetailPanel({ id, onClose }: Props) {
   const [slow, setSlow] = useState(false)
   const [attempt, setAttempt] = useState(0)
   const closeBtn = useRef<HTMLButtonElement>(null)
+  const panel = useRef<HTMLDivElement>(null)
   const opener = useRef<Element | null>(document.activeElement)
 
   // fetch; abort when id changes or panel closes so a slow earlier event can't overwrite a newer one
@@ -42,7 +43,18 @@ export function DetailPanel({ id, onClose }: Props) {
 
   useEffect(() => {
     closeBtn.current?.focus()
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && close()
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') return close()
+      if (e.key !== 'Tab') return
+      // Focus trap: the page behind is blurred and blocked, so Tab must cycle inside the panel.
+      const focusables = panel.current?.querySelectorAll<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')
+      if (!focusables?.length) return
+      const first = focusables[0]
+      const last = focusables[focusables.length - 1]
+      const inside = panel.current?.contains(document.activeElement)
+      if (e.shiftKey && (document.activeElement === first || !inside)) { e.preventDefault(); last.focus() }
+      else if (!e.shiftKey && (document.activeElement === last || !inside)) { e.preventDefault(); first.focus() }
+    }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [close])
@@ -50,7 +62,7 @@ export function DetailPanel({ id, onClose }: Props) {
   return (
     <>
     <div className="backdrop" onClick={close} aria-hidden="true" />
-    <div className="panel" role="dialog" aria-label="Event details">
+    <div ref={panel} className="panel" role="dialog" aria-modal="true" aria-label="Event details">
       <div className="panel-head">
         <h2>Event details</h2>
         <button ref={closeBtn} onClick={close} aria-label="Close details (Esc)">✕</button>

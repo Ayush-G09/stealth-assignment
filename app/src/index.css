@@ -83,12 +83,11 @@ pre { background: var(--surface); padding: 10px; border-radius: 6px; overflow: a
 .copy { padding: 1px 8px; font-size: 12px; }
 .json-actions { display: flex; gap: 8px; margin-bottom: 4px; }
 .tag { display: inline-block; margin: 0 4px 4px 0; padding: 0 8px; border-radius: 4px; background: var(--surface); border: 1px solid var(--border); font-size: 12px; }
-.backdrop { display: none; }
+/* Dim + blur everything left of the panel; clicking it closes the panel. */
+.backdrop { position: fixed; inset: 0; z-index: 9; background: rgba(0, 0, 0, .28); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); animation: fade-in .15s ease-out; }
+@keyframes fade-in { from { opacity: 0; } }
 .panel { animation: slide-in .15s ease-out; }
 @keyframes slide-in { from { transform: translateX(24px); opacity: 0; } }
-@media (max-width: 900px) {
-  .backdrop { display: block; position: fixed; inset: 0; z-index: 9; background: rgba(0, 0, 0, .45); }
-}
 
 .theme-toggle { display: inline-flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
 .theme-toggle button { border: 0; border-radius: 0; padding: 4px 10px; font-size: 13px; background: var(--bg); }
