@@ -69,3 +69,13 @@ pre { background: var(--surface); padding: 10px; border-radius: 6px; overflow: a
 .chip { padding: 2px 10px; border-radius: 999px; background: var(--selected); border-color: transparent; font-size: 13px; }
 .chip:hover { border-color: var(--accent); }
 .chip-clear { border: 0; background: none; color: var(--accent); text-decoration: underline; padding: 2px 6px; font-size: 13px; }
+
+.copy { padding: 1px 8px; font-size: 12px; }
+.json-actions { display: flex; gap: 8px; margin-bottom: 4px; }
+.tag { display: inline-block; margin: 0 4px 4px 0; padding: 0 8px; border-radius: 4px; background: var(--surface); border: 1px solid var(--border); font-size: 12px; }
+.backdrop { display: none; }
+.panel { animation: slide-in .15s ease-out; }
+@keyframes slide-in { from { transform: translateX(24px); opacity: 0; } }
+@media (max-width: 900px) {
+  .backdrop { display: block; position: fixed; inset: 0; z-index: 9; background: rgba(0, 0, 0, .45); }
+}

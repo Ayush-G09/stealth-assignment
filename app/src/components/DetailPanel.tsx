@@ -48,6 +48,8 @@ export function DetailPanel({ id, onClose }: Props) {
   }, [close])
 
   return (
+    <>
+    <div className="backdrop" onClick={close} aria-hidden="true" />
     <aside className="panel" role="dialog" aria-label="Event details">
       <div className="panel-head">
         <h2>Event details</h2>
@@ -68,39 +70,67 @@ export function DetailPanel({ id, onClose }: Props) {
         {event && (
           <>
             <dl>
-              <dt>ID</dt><dd><code>{event.id}</code></dd>
+              <dt>ID</dt><dd><code>{event.id}</code> <CopyButton text={event.id} label="Copy event ID" /></dd>
               <dt>Time</dt><dd>{new Date(event.timestamp).toLocaleString()}</dd>
               <dt>Agent</dt><dd>{event.agent}</dd>
               <dt>Tool</dt><dd><code>{event.tool}</code></dd>
               <dt>Status</dt><dd><span className={`badge ${event.status}`}>{event.status}</span></dd>
               <dt>Latency</dt><dd>{event.latencyMs} ms</dd>
               <dt>Policy matches</dt>
-              <dd>{event.policyMatches?.length ? event.policyMatches.join(', ') : <span className="muted">none</span>}</dd>
+              <dd>
+                {event.policyMatches?.length
+                  ? event.policyMatches.map((m) => <span key={m} className="tag">{m}</span>)
+                  : <span className="muted">none</span>}
+              </dd>
             </dl>
             <h3>Args</h3>
-            <Json value={event.args} />
+            <Json value={event.args} label="Copy args" />
             <h3>Result</h3>
-            <Json value={event.result} />
+            <Json value={event.result} label="Copy result" />
           </>
         )}
       </div>
     </aside>
+    </>
   )
 }
 
 const MAX_CHARS = 20000
 
 /** Args can be huge, so cap what we render until the user asks for everything. */
-function Json({ value }: { value: unknown }) {
+function Json({ value, label }: { value: unknown; label: string }) {
   const [all, setAll] = useState(false)
   const text = JSON.stringify(value, null, 2) ?? 'null'
   const clipped = !all && text.length > MAX_CHARS
   return (
     <>
       <pre tabIndex={0}>{clipped ? text.slice(0, MAX_CHARS) + '\n…' : text}</pre>
-      {clipped && (
-        <button onClick={() => setAll(true)}>Show all ({(text.length / 1024).toFixed(0)} KB)</button>
-      )}
+      <div className="json-actions">
+        {clipped && <button onClick={() => setAll(true)}>Show all ({(text.length / 1024).toFixed(0)} KB)</button>}
+        <CopyButton text={text} label={label} />
+      </div>
     </>
+  )
+}
+
+/** Copies the full text (never the clipped preview). Clipboard can be unavailable or denied, so report failure. */
+function CopyButton({ text, label }: { text: string; label: string }) {
+  const [state, setState] = useState<'idle' | 'copied' | 'failed'>('idle')
+  const timer = useRef(0)
+  useEffect(() => () => clearTimeout(timer.current), [])
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(text)
+      setState('copied')
+    } catch {
+      setState('failed')
+    }
+    clearTimeout(timer.current)
+    timer.current = window.setTimeout(() => setState('idle'), 1800)
+  }
+  return (
+    <button className="copy" onClick={copy} aria-label={label}>
+      {state === 'copied' ? 'Copied ✓' : state === 'failed' ? 'Copy failed' : 'Copy'}
+    </button>
   )
 }
