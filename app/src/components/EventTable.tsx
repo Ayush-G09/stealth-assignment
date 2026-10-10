@@ -85,6 +85,7 @@ export function EventTable(p: Props) {
         {p.moreError && (
           <span>Couldn't load more ({p.moreError}) <button onClick={p.onRetry}>Retry</button></span>
         )}
+        {p.hasMore && !p.loadingMore && !p.moreError && <button onClick={p.onLoadMore}>Load more</button>}
         {!p.hasMore && !p.loadingMore && <span className="muted">End of results</span>}
       </div>
     </>
