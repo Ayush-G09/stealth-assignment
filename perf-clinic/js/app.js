@@ -64,26 +64,35 @@ function rememberViewed(items) {
 }
 
 // Newest-first order and per-event search text are computed once, not on every keystroke.
+// `haystacks[i]` is the lowercased JSON of `sortedEvents[i]`.
 let sortedEvents = null;
 let haystacks = null;
 
-function buildHaystacks() {
-  if (!haystacks) {
-    haystacks = new Map(window.ACTIVITY.map((event) => [event, JSON.stringify(event).toLowerCase()]));
-  }
-}
-
-function search(query) {
-  const needle = query.trim().toLowerCase();
+function sortEvents() {
   if (!sortedEvents) {
     sortedEvents = window.ACTIVITY
       .map((event) => ({ event, ts: Date.parse(event.timestamp) }))
       .sort((a, b) => b.ts - a.ts)
       .map((entry) => entry.event);
   }
-  if (!needle) return sortedEvents;
-  buildHaystacks();
-  return sortedEvents.filter((event) => haystacks.get(event).includes(needle));
+  return sortedEvents;
+}
+
+function buildHaystacks() {
+  if (!haystacks) haystacks = sortEvents().map((event) => JSON.stringify(event).toLowerCase());
+  return haystacks;
+}
+
+function search(query) {
+  const needle = query.trim().toLowerCase();
+  const events = sortEvents();
+  if (!needle) return events;
+  const texts = buildHaystacks();
+  const matches = [];
+  for (let i = 0; i < events.length; i++) {
+    if (texts[i].includes(needle)) matches.push(events[i]);
+  }
+  return matches;
 }
 
 function renderResults(query) {
