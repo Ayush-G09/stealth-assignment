@@ -12,16 +12,22 @@ export function FilterBar({ filters, total, onChange }: Props) {
   const [agentsFailed, setAgentsFailed] = useState(false)
   const [text, setText] = useState(filters.q)
 
-  const loadAgents = () => {
-    setAgentsFailed(false)
+  const [attempt, setAttempt] = useState(0)
+  useEffect(() => {
     const c = new AbortController()
-    fetchAgents(c.signal).then(setAgents).catch((e: Error) => e.name !== 'AbortError' && setAgentsFailed(true))
-    return c
-  }
-  useEffect(() => { const c = loadAgents(); return () => c.abort() }, [])
+    fetchAgents(c.signal)
+      .then((list) => { setAgents(list); setAgentsFailed(false) })
+      .catch((e: Error) => { if (e.name !== 'AbortError') setAgentsFailed(true) })
+    return () => c.abort()
+  }, [attempt])
 
-  // keep input in sync when URL changes via back/forward
-  useEffect(() => setText(filters.q), [filters.q])
+  // Keep the input in sync when the URL changes underneath it (back/forward, chips, clear).
+  // Adjusting state during render is the supported way to derive state from a changed prop.
+  const [seenQ, setSeenQ] = useState(filters.q)
+  if (filters.q !== seenQ) {
+    setSeenQ(filters.q)
+    setText(filters.q)
+  }
 
   // debounce typing -> URL (replace so each keystroke doesn't spam history)
   useEffect(() => {
@@ -58,7 +64,7 @@ export function FilterBar({ filters, total, onChange }: Props) {
       <details className="agent-menu">
         <summary>Agents{filters.agents.length ? ` (${filters.agents.length})` : ''}</summary>
         <div className="agent-list">
-          {agentsFailed && <button onClick={loadAgents}>Couldn't load agents, retry</button>}
+          {agentsFailed && <button onClick={() => setAttempt((n) => n + 1)}>Couldn't load agents, retry</button>}
           {agents.map((a) => (
             <label key={a}>
               <input type="checkbox" checked={filters.agents.includes(a)} onChange={() => toggleAgent(a)} /> {a}

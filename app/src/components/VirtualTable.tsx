@@ -95,9 +95,10 @@ export function VirtualTable(p: Props) {
   useLayoutEffect(updateRange, [updateRange])
 
   // Infinite loading: driven by scroll position, not by a DOM sentinel.
+  const { hasMore, loadingMore, moreError, onLoadMore } = p
   useEffect(() => {
-    if (p.hasMore && !p.loadingMore && !p.moreError && range.end >= count - LOAD_AHEAD) p.onLoadMore()
-  }, [range.end, count, p.hasMore, p.loadingMore, p.moreError, p.onLoadMore])
+    if (hasMore && !loadingMore && !moreError && range.end >= count - LOAD_AHEAD) onLoadMore()
+  }, [range.end, count, hasMore, loadingMore, moreError, onLoadMore])
 
   const moveTo = (index: number) => {
     const el = scroller.current

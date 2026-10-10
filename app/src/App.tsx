@@ -11,7 +11,6 @@ export default function App() {
   const [url, update] = useUrlState()
   const filters = { q: url.q, agents: url.agents, status: url.status }
   const ev = useEvents(filters)
-  const onChange = useCallback(update, [update])
   const closePanel = useCallback(() => update({ eventId: null }), [update])
   const clear = () => update({ q: '', agents: [], status: '' })
 
@@ -24,7 +23,7 @@ export default function App() {
         </div>
         <ThemeToggle />
       </header>
-      <FilterBar filters={filters} total={ev.total} onChange={onChange} />
+      <FilterBar filters={filters} total={ev.total} onChange={update} />
       <main>
         <EventTable
           {...ev}

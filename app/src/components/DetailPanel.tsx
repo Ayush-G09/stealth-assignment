@@ -18,10 +18,10 @@ export function DetailPanel({ id, onClose }: Props) {
   const panel = useRef<HTMLDivElement>(null)
   const opener = useRef<Element | null>(document.activeElement)
 
-  // fetch; abort when id changes or panel closes so a slow earlier event can't overwrite a newer one
+  // Fetch; abort on unmount/retry so a slow earlier request can't overwrite a newer one.
+  // App keys this component by event id, so a new id remounts it with fresh state.
   useEffect(() => {
     const c = new AbortController()
-    setEvent(null); setError(null); setNotFound(false); setSlow(false)
     const t = setTimeout(() => setSlow(true), SLOW_MS)
     fetchEvent(id, c.signal)
       .then((e) => { clearTimeout(t); setSlow(false); setEvent(e) })
@@ -34,6 +34,13 @@ export function DetailPanel({ id, onClose }: Props) {
       })
     return () => { c.abort(); clearTimeout(t) }
   }, [id, attempt])
+
+  const retry = () => {
+    setError(null)
+    setNotFound(false)
+    setSlow(false)
+    setAttempt((n) => n + 1)
+  }
 
   // Esc closes; focus moves in on open and back to the row on close
   const close = useCallback(() => {
@@ -76,7 +83,7 @@ export function DetailPanel({ id, onClose }: Props) {
             <p>{notFound ? error : `Couldn't load this event: ${error}`}</p>
             {notFound
               ? <button onClick={close}>Close</button> // retrying a missing event can't succeed
-              : <button onClick={() => setAttempt((n) => n + 1)}>Try again</button>}
+              : <button onClick={retry}>Try again</button>}
           </div>
         )}
         {event && (

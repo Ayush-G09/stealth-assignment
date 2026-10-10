@@ -34,15 +34,19 @@ export function serialize(s: UrlState): string {
  */
 export function useUrlState() {
   const [state, setState] = useState<UrlState>(() => parse(location.search))
+  // Mirrors `state` so `update` can build the next URL synchronously; written only where state changes.
+  const ref = useRef(state)
 
   useEffect(() => {
-    const onPop = () => setState(parse(location.search))
+    const onPop = () => {
+      const s = parse(location.search)
+      ref.current = s
+      setState(s)
+    }
     window.addEventListener('popstate', onPop)
     return () => window.removeEventListener('popstate', onPop)
   }, [])
 
-  const ref = useRef(state)
-  ref.current = state
 
   const update = useCallback((patch: Partial<UrlState>, mode: 'push' | 'replace' = 'push') => {
     const next = { ...ref.current, ...patch }
