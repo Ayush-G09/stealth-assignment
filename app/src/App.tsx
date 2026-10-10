@@ -1,6 +1,7 @@
 import { useCallback } from 'react'
 import { DetailPanel } from './components/DetailPanel'
 import { EventTable } from './components/EventTable'
+import { ThemeToggle } from './components/ThemeToggle'
 import { FilterBar } from './components/FilterBar'
 import { useEvents } from './lib/useEvents'
 import { useUrlState } from './lib/useUrlState'
@@ -17,8 +18,11 @@ export default function App() {
   return (
     <div className="app">
       <header>
-        <h1>Agent Activity Explorer</h1>
-        <p className="muted subtitle">Browse, search and inspect tool calls made by your AI agents.</p>
+        <div>
+          <h1>Agent Activity Explorer</h1>
+          <p className="muted subtitle">Browse, search and inspect tool calls made by your AI agents.</p>
+        </div>
+        <ThemeToggle />
       </header>
       <FilterBar filters={filters} total={ev.total} onChange={onChange} />
       <main>

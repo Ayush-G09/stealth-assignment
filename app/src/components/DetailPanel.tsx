@@ -50,7 +50,7 @@ export function DetailPanel({ id, onClose }: Props) {
   return (
     <>
     <div className="backdrop" onClick={close} aria-hidden="true" />
-    <aside className="panel" role="dialog" aria-label="Event details">
+    <div className="panel" role="dialog" aria-label="Event details">
       <div className="panel-head">
         <h2>Event details</h2>
         <button ref={closeBtn} onClick={close} aria-label="Close details (Esc)">✕</button>
@@ -90,7 +90,7 @@ export function DetailPanel({ id, onClose }: Props) {
           </>
         )}
       </div>
-    </aside>
+    </div>
     </>
   )
 }

@@ -6,7 +6,6 @@ import { computeRange, scrollTopToReveal, type Range } from '../lib/virtual'
 // Fixed heights are what make the windowing math O(1); they must match the CSS (--row-h / --head-h).
 const ROW_H = 40
 const HEAD_H = 36
-const FOOTER_H = 56
 const OVERSCAN = 8
 const LOAD_AHEAD = 30 // start fetching the next page this many rows before the end
 
@@ -143,6 +142,7 @@ export function VirtualTable(p: Props) {
   const rows = p.items.slice(range.start, range.end)
 
   return (
+    <div className="vt-wrap">
     <div
       ref={scroller}
       className="vt"
@@ -180,12 +180,15 @@ export function VirtualTable(p: Props) {
           })}
         </div>
       </div>
-      <div className="vt-foot" style={{ height: FOOTER_H }} role="status" aria-live="polite">
+    </div>
+      <div className="vt-foot" role="status" aria-live="polite">
         {p.loadingMore && <span>{p.slow ? 'Still loading, slow connection…' : 'Loading more…'}</span>}
         {p.moreError && (
           <span>Couldn't load more ({p.moreError}) <button onClick={p.onRetry}>Retry</button></span>
         )}
-        {p.hasMore && !p.loadingMore && !p.moreError && <button onClick={p.onLoadMore}>Load more</button>}
+        {p.hasMore && !p.loadingMore && !p.moreError && (
+          <span className="muted">Showing {count.toLocaleString()}{p.total ? ` of ${p.total.toLocaleString()}` : ''} events</span>
+        )}
         {!p.hasMore && !p.loadingMore && <span className="muted">End of results ({count.toLocaleString()} events)</span>}
       </div>
     </div>

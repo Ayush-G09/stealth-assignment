@@ -40,8 +40,8 @@ export function FilterBar({ filters, total, onChange }: Props) {
   ]
 
   return (
-    <div className="filter-wrap">
-    <div className="filters" role="search">
+    <div className="filter-wrap" role="search">
+    <div className="filters">
       <input
         type="search" aria-label="Search events" placeholder="Search agent, tool, args…"
         value={text} onChange={(e) => setText(e.target.value)}
