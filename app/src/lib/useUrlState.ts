@@ -12,7 +12,7 @@ export function parse(search: string): UrlState {
   const status = p.get('status') as Status | null
   return {
     q: p.get('q') ?? '',
-    agents: p.getAll('agent'),
+    agents: p.getAll('agent').filter((a) => a !== ''), // a hand-edited "?agent=" is not a filter
     status: status && STATUSES.includes(status) ? status : '',
     eventId: p.get('event'),
   }

@@ -67,6 +67,10 @@ describe('parse', () => {
     expect(() => parse('?q=%E0%A4%A')).not.toThrow()
   })
 
+  it('ignores empty agent values (a hand-edited "?agent=" must not become an empty filter)', () => {
+    expect(parse('?agent=').agents).toEqual([])
+    expect(parse('?agent=a&agent=&agent=b').agents).toEqual(['a', 'b'])
+  })
 })
 
 describe('serialize', () => {
