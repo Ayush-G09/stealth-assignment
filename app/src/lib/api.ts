@@ -96,4 +96,27 @@ export function fetchEvents(filters: Filters, cursor: string | null, signal: Abo
 export const fetchEvent = (id: string, signal: AbortSignal) =>
   getJson<EventDetail>(`/events/${encodeURIComponent(id)}`, signal)
 
+export type Bucket = '1m' | '5m' | '1h'
+
+export interface HistogramBucket {
+  t: string // ISO start of the bucket (UTC)
+  count: number
+}
+
+export interface Histogram {
+  bucket: Bucket
+  buckets: HistogramBucket[] // empty buckets are omitted by the API
+}
+
+/** Event counts per time bucket for the same search, agent, status and time range as the list. */
+export function fetchHistogram(filters: Filters, bucket: Bucket, signal: AbortSignal) {
+  const p = new URLSearchParams({ bucket })
+  if (filters.q) p.set('q', filters.q)
+  filters.agents.forEach((a) => p.append('agent', a))
+  if (filters.status) p.set('status', filters.status)
+  if (filters.from) p.set('from', filters.from)
+  if (filters.to) p.set('to', filters.to)
+  return getJson<Histogram>(`/events/histogram?${p}`, signal)
+}
+
 export const fetchAgents = (signal: AbortSignal) => getJson<string[]>('/agents', signal)

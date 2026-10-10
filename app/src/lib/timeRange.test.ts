@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest'
-import { formatRangeLabel, isIsoTimestamp, sanitizeRange } from './timeRange'
+import { formatRangeLabel, fromLocalInput, isIsoTimestamp, sanitizeRange, toLocalInput } from './timeRange'
 
 describe('isIsoTimestamp', () => {
   it.each([
@@ -79,5 +79,28 @@ describe('formatRangeLabel', () => {
 
   it('is empty when there is no range', () => {
     expect(formatRangeLabel({ from: '', to: '' })).toBe('')
+  })
+})
+
+describe('datetime-local helpers', () => {
+  it('round-trips an instant to the minute, in whatever timezone the tests run in', () => {
+    const iso = '2026-10-09T10:30:00.000Z'
+    expect(fromLocalInput(toLocalInput(iso))).toBe(iso)
+  })
+
+  it('formats as the YYYY-MM-DDTHH:mm shape a datetime-local input needs', () => {
+    expect(toLocalInput('2026-10-09T10:30:00Z')).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/)
+  })
+
+  it('treats the input value as local time', () => {
+    const d = new Date(2026, 9, 9, 15, 45) // local 15:45
+    expect(fromLocalInput('2026-10-09T15:45')).toBe(d.toISOString())
+  })
+
+  it('returns an empty string for empty or invalid values', () => {
+    expect(toLocalInput('')).toBe('')
+    expect(toLocalInput('garbage')).toBe('')
+    expect(fromLocalInput('')).toBe('')
+    expect(fromLocalInput('not a date')).toBe('')
   })
 })
